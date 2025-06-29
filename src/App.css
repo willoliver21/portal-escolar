@@ -40,3 +40,50 @@
 .read-the-docs {
   color: #888;
 }
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #444;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-role {
+  font-style: italic;
+  color: #aaa;
+  font-size: 0.9em;
+}
+
+.logout-button {
+  background-color: #555;
+}
+.logout-button:hover {
+  background-color: #777;
+}
+
+.app-nav {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.app-main {
+  background-color: #2d2d2d;
+  padding: 1.5rem;
+  border-radius: 8px;
+}

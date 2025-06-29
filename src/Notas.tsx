@@ -1,172 +1,234 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 
-interface Nota {
-  id: string
-  aluno_id: string
-  materia: string
-  nota: number
-  data: string
+// Interfaces para os nossos tipos de dados
+interface Turma {
+  id: string;
+  nome: string;
 }
 
 interface Aluno {
-  id: string
-  nome: string
+  id:string;
+  nome: string;
+}
+
+interface Nota {
+  id: string;
+  aluno_id: string;
+  materia: string;
+  nota: number;
+  data: string;
 }
 
 export function Notas() {
-  const [alunos, setAlunos] = useState<Aluno[]>([])
-  const [notas, setNotas] = useState<Nota[]>([])
-  const [materia, setMateria] = useState('')
-  const [notaInput, setNotaInput] = useState('')
-  const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [dataSelecionada, setDataSelecionada] = useState(() =>
-    new Date().toISOString().slice(0, 10)
-  )
+  // Estados para seleção e dados
+  const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [selectedTurmaId, setSelectedTurmaId] = useState<string>('');
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [selectedAlunoId, setSelectedAlunoId] = useState<string>('');
+  const [notas, setNotas] = useState<Nota[]>([]);
 
+  // Estados para os formulários
+  const [materia, setMateria] = useState('');
+  const [notaInput, setNotaInput] = useState('');
+  const [dataSelecionada, setDataSelecionada] = useState(() => new Date().toISOString().slice(0, 10));
+
+  // Estados de carregamento
+  const [loadingTurmas, setLoadingTurmas] = useState(true);
+  const [loadingAlunos, setLoadingAlunos] = useState(false);
+  const [loadingNotas, setLoadingNotas] = useState(false);
+
+  // Efeito 1: Buscar as turmas do professor logado.
   useEffect(() => {
-    async function fetchAlunos() {
-      const { data: alunosData, error } = await supabase.from('alunos').select('id, nome')
+    async function fetchTurmas() {
+      setLoadingTurmas(true);
+      const { data, error } = await supabase.rpc('get_minhas_turmas');
       if (error) {
-        console.error(error)
+        console.error('Erro ao buscar turmas:', error);
       } else {
-        setAlunos(alunosData || [])
+        setTurmas(data || []);
       }
+      setLoadingTurmas(false);
     }
-    fetchAlunos()
-  }, [])
+    fetchTurmas();
+  }, []);
 
+  // Efeito 2: Buscar os alunos sempre que uma turma for selecionada.
   useEffect(() => {
-    async function fetchNotas() {
-      if (!alunoSelecionado) {
-        setNotas([])
-        return
+    // Limpa a lista de alunos e seleções se nenhuma turma estiver selecionada.
+    if (!selectedTurmaId) {
+      setAlunos([]);
+      setSelectedAlunoId('');
+      return;
+    }
+    
+    async function fetchAlunosDaTurma() {
+      setLoadingAlunos(true);
+      setSelectedAlunoId(''); // Limpa a seleção de aluno anterior
+      const { data, error } = await supabase
+        .from('matriculas')
+        .select('alunos(id, nome)')
+        .eq('turma_id', selectedTurmaId);
+      
+      if (error) {
+        console.error('Erro ao buscar alunos da turma:', error);
+      } else if (data) {
+        const alunosDaTurma = data.map(item => item.alunos).filter(Boolean) as Aluno[];
+        setAlunos(alunosDaTurma);
       }
-      setLoading(true)
-      const { data: notasData, error } = await supabase
+      setLoadingAlunos(false);
+    }
+    fetchAlunosDaTurma();
+  }, [selectedTurmaId]);
+
+  // Efeito 3: Buscar as notas sempre que um aluno for selecionado.
+  useEffect(() => {
+    if (!selectedAlunoId) {
+      setNotas([]);
+      return;
+    }
+
+    async function fetchNotasDoAluno() {
+      setLoadingNotas(true);
+      const { data, error } = await supabase
         .from('notas')
         .select('*')
-        .eq('aluno_id', alunoSelecionado)
+        .eq('aluno_id', selectedAlunoId);
 
       if (error) {
-        console.error(error)
+        console.error('Erro ao buscar notas:', error);
       } else {
-        setNotas(notasData || [])
+        setNotas(data || []);
       }
-      setLoading(false)
+      setLoadingNotas(false);
     }
-    fetchNotas()
-  }, [alunoSelecionado])
-
-  async function handleAdicionarNota() {
-    if (!alunoSelecionado || !materia || !notaInput) {
-      alert('Preencha todos os campos')
-      return
+    fetchNotasDoAluno();
+  }, [selectedAlunoId]);
+  
+  // Função para adicionar uma nova nota
+  async function handleAdicionarNota(e: React.FormEvent) {
+    e.preventDefault();
+    if (!materia || !notaInput) {
+      alert('Por favor, preencha a matéria e a nota.');
+      return;
     }
 
-    const valorNota = parseFloat(notaInput)
+    const valorNota = parseFloat(notaInput);
     if (isNaN(valorNota) || valorNota < 0 || valorNota > 10) {
-      alert('Nota inválida. Deve ser número entre 0 e 10.')
-      return
+      alert('A nota deve ser um número entre 0 e 10.');
+      return;
     }
 
-    const { error } = await supabase.from('notas').insert([
-      {
-        aluno_id: alunoSelecionado,
+    const { data: novaNota, error } = await supabase
+      .from('notas')
+      .insert({
+        aluno_id: selectedAlunoId,
         materia,
         nota: valorNota,
         data: dataSelecionada,
-      },
-    ])
+      })
+      .select()
+      .single();
 
     if (error) {
-      console.error(error)
-      alert('Erro ao adicionar nota')
+      console.error("Erro ao adicionar nota:", error);
+      alert("Ocorreu um erro ao adicionar a nota.");
     } else {
-      alert('Nota adicionada com sucesso!')
-      setMateria('')
-      setNotaInput('')
-
-      const { data: notasAtualizadas, error: erroNotas } = await supabase
-        .from('notas')
-        .select('*')
-        .eq('aluno_id', alunoSelecionado)
-
-      if (erroNotas) {
-        console.error(erroNotas)
-      } else {
-        setNotas(notasAtualizadas || [])
-      }
+      setNotas(prevNotas => [...prevNotas, novaNota]);
+      // Limpar campos do formulário
+      setMateria('');
+      setNotaInput('');
     }
+  }
+
+  if (loadingTurmas) {
+    return <p>A carregar as suas turmas...</p>;
   }
 
   return (
     <div>
-      <h2>Notas dos Alunos</h2>
-
-      <label>
-        Selecionar aluno:
-        <select
-          value={alunoSelecionado ?? ''}
-          onChange={e => setAlunoSelecionado(e.target.value)}
-        >
-          <option value="">-- Selecione --</option>
-          {alunos.map(aluno => (
-            <option key={aluno.id} value={aluno.id}>
-              {aluno.nome}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {alunoSelecionado && (
+      <h2>Lançamento de Notas</h2>
+      
+      {turmas.length > 0 ? (
         <>
-          <h3>Lançar nova nota</h3>
-          <label>
-            Matéria:
-            <input
-              type="text"
-              value={materia}
-              onChange={e => setMateria(e.target.value)}
-              placeholder="Ex: Matemática"
-            />
-          </label>
-          <br />
-          <label>
-            Nota (0-10):
-            <input
-              type="number"
-              min="0"
-              max="10"
-              step="0.1"
-              value={notaInput}
-              onChange={e => setNotaInput(e.target.value)}
-            />
-          </label>
-          <br />
-          <label>
-            Data:
-            <input
-              type="date"
-              value={dataSelecionada}
-              onChange={e => setDataSelecionada(e.target.value)}
-            />
-          </label>
-          <br />
-          <button onClick={handleAdicionarNota}>Adicionar Nota</button>
-
-          <h3>Notas lançadas</h3>
-          {loading && <p>Carregando notas...</p>}
-          <ul>
-            {notas.map(nota => (
-              <li key={nota.id}>
-                {nota.materia} - {nota.nota} ({nota.data})
-              </li>
+          <label htmlFor="turma-select">Selecione uma Turma:</label>
+          <select 
+            id="turma-select"
+            value={selectedTurmaId} 
+            onChange={e => setSelectedTurmaId(e.target.value)}
+          >
+            <option value="">-- Por favor, escolha uma turma --</option>
+            {turmas.map(turma => (
+              <option key={turma.id} value={turma.id}>{turma.nome}</option>
             ))}
-          </ul>
+          </select>
+
+          {loadingAlunos && <p>A carregar alunos...</p>}
+          
+          {alunos.length > 0 && !loadingAlunos && (
+            <div style={{ marginTop: '20px' }}>
+              <label htmlFor="aluno-select">Selecione um Aluno:</label>
+              <select 
+                id="aluno-select"
+                value={selectedAlunoId} 
+                onChange={e => setSelectedAlunoId(e.target.value)}
+              >
+                <option value="">-- Por favor, escolha um aluno --</option>
+                {alunos.map(aluno => (
+                  <option key={aluno.id} value={aluno.id}>{aluno.nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {selectedAlunoId && (
+            <div style={{ marginTop: '30px' }}>
+              <h3>Lançar nova nota para o aluno selecionado</h3>
+              <form onSubmit={handleAdicionarNota}>
+                <input
+                  type="text"
+                  placeholder="Matéria (ex: Matemática)"
+                  value={materia}
+                  onChange={e => setMateria(e.target.value)}
+                  required
+                />
+                <input
+                  type="number"
+                  placeholder="Nota (0-10)"
+                  value={notaInput}
+                  onChange={e => setNotaInput(e.target.value)}
+                  step="0.1"
+                  min="0"
+                  max="10"
+                  required
+                />
+                <input
+                  type="date"
+                  value={dataSelecionada}
+                  onChange={e => setDataSelecionada(e.target.value)}
+                  required
+                />
+                <button type="submit">Adicionar Nota</button>
+              </form>
+              
+              <h3 style={{ marginTop: '30px' }}>Notas Lançadas</h3>
+              {loadingNotas ? <p>A carregar notas...</p> : (
+                <ul>
+                  {notas.length > 0 ? notas.map(nota => (
+                    <li key={nota.id}>
+                      {new Date(nota.data).toLocaleDateString()}: {nota.materia} - <strong>{nota.nota}</strong>
+                    </li>
+                  )) : (
+                    <p>Nenhuma nota lançada para este aluno ainda.</p>
+                  )}
+                </ul>
+              )}
+            </div>
+          )}
         </>
+      ) : (
+        <p>Não existem turmas associadas a si. Por favor, contacte um administrador.</p>
       )}
     </div>
-  )
+  );
 }

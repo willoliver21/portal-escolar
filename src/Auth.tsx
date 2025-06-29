@@ -1,63 +1,68 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { supabase } from './supabaseClient'
-
+import './Auth.css' // Importar o novo ficheiro CSS
 
 export function Auth() {
+  const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const session = supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null)
-    })
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => {
-      listener?.subscription.unsubscribe()
-    }
-  }, [])
-
-  async function handleLogin() {
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault() // Impede que o formulário recarregue a página
     setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
-  }
+    setLoading(true)
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-  }
-
-  if (user) {
-    return (
-      <div>
-        <p>Olá, {user.email}</p>
-        <button onClick={handleLogout}>Sair</button>
-      </div>
-    )
+    if (error) {
+      setError("Email ou senha inválidos. Por favor, tente novamente.")
+    }
+    setLoading(false)
   }
 
   return (
-    <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <input
-        type="email"
-        placeholder="email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      /><br />
-      <input
-        type="password"
-        placeholder="senha"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-      /><br />
-      <button onClick={handleLogin}>Entrar</button>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1 className="auth-title">Portal Escolar</h1>
+        <p className="auth-subtitle">Bem-vindo(a) de volta! Faça login para continuar.</p>
+        
+        <form onSubmit={handleLogin}>
+          <div className="input-group">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu.email@escola.com"
+              required
+              disabled={loading}
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="password">Senha</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              disabled={loading}
+            />
+          </div>
+
+          {error && <p className="auth-error">{error}</p>}
+
+          <button className="auth-button" type="submit" disabled={loading}>
+            {loading ? 'A entrar...' : 'Entrar'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

@@ -8,95 +8,73 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts'
 
-interface Aluno {
-  id: string
+// Interface para descrever o formato dos dados que nossa função SQL retorna.
+interface DadosGrafico {
   nome: string
-}
-
-interface Frequencia {
-  aluno_id: string
-  presente: boolean
+  presenca: number
 }
 
 export function Dashboard() {
-  const [alunos, setAlunos] = useState<Aluno[]>([])
-  const [frequencias, setFrequencias] = useState<Frequencia[]>([])
-  const [loading, setLoading] = useState(false)
+  // Estado para armazenar os dados já processados que vêm do Supabase.
+  const [dadosGrafico, setDadosGrafico] = useState<DadosGrafico[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchDados() {
+    async function fetchDadosDashboard() {
       setLoading(true)
+      setError(null)
 
-      const { data: alunosData, error: alunosError } = await supabase
-        .from('alunos')
-        .select('id, nome')
+      // Chamamos nossa função 'get_dashboard_presenca' usando rpc().
+      // É muito mais eficiente!
+      const { data, error } = await supabase.rpc('get_dashboard_presenca')
 
-      if (alunosError) {
-        console.error(alunosError)
-        setLoading(false)
-        return
-      }
-
-      setAlunos(alunosData || [])
-
-      const { data: freqData, error: freqError } = await supabase
-        .from('frequencias')
-        .select('aluno_id, presente')
-
-      if (freqError) {
-        console.error(freqError)
+      if (error) {
+        console.error('Erro ao buscar dados do dashboard:', error)
+        setError('Não foi possível carregar os dados do dashboard.')
       } else {
-        setFrequencias(freqData || [])
+        // Os dados já vêm no formato que precisamos!
+        setDadosGrafico(data || [])
       }
 
       setLoading(false)
     }
 
-    fetchDados()
-  }, [])
+    fetchDadosDashboard()
+  }, []) // O array de dependências vazio garante que isso rode apenas uma vez.
 
-  function prepararDadosParaGrafico() {
-    return alunos.map(aluno => {
-      const freqAluno = frequencias.filter(f => f.aluno_id === aluno.id)
-      const presencas = freqAluno.filter(f => f.presente).length
-      const total = freqAluno.length
-      const percPresenca = total ? (presencas / total) * 100 : 0
-
-      return {
-        nome: aluno.nome,
-        presenca: parseFloat(percPresenca.toFixed(1)),
-      }
-    })
+  if (loading) {
+    return <p>Carregando dados do dashboard...</p>
   }
 
-  // Logs para testar no console do navegador
-  console.log("Alunos:", alunos)
-  console.log("Frequencias:", frequencias)
-  console.log("Dados para gráfico:", prepararDadosParaGrafico())
+  if (error) {
+    return <p style={{ color: 'red' }}>{error}</p>
+  }
 
   return (
-    <div>
-      <h2>Dashboard - Presença dos Alunos</h2>
-      {loading ? (
-        <p>Carregando dados...</p>
-      ) : (
-        <>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={prepararDadosParaGrafico()}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="nome" />
-              <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="presenca" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </>
-      )}
+    <div style={{ width: '100%', height: 400 }}>
+      <h2>Dashboard - Percentual de Presença por Aluno</h2>
+      <ResponsiveContainer>
+        <BarChart
+          data={dadosGrafico}
+          margin={{
+            top: 20,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="nome" />
+          <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+          <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+          <Legend />
+          <Bar dataKey="presenca" fill="#8884d8" name="Presença (%)" />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   )
 }
