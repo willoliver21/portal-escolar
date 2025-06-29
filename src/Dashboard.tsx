@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
+import React, { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
+import { useNotification } from './NotificationContext';
 import {
   BarChart,
   Bar,
@@ -9,72 +10,80 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from 'recharts'
+} from 'recharts';
 
-// Interface para descrever o formato dos dados que nossa função SQL retorna.
-interface DadosGrafico {
-  nome: string
-  presenca: number
+// Interface
+interface PresencaData {
+  nome: string;
+  presenca: number;
 }
 
+// Componente
 export function Dashboard() {
-  // Estado para armazenar os dados já processados que vêm do Supabase.
-  const [dadosGrafico, setDadosGrafico] = useState<DadosGrafico[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { showToast } = useNotification();
+  const [presencaData, setPresencaData] = useState<PresencaData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchDadosDashboard() {
-      setLoading(true)
-      setError(null)
+    async function fetchDashboardData() {
+      setLoading(true);
 
-      // Chamamos nossa função 'get_dashboard_presenca' usando rpc().
-      // É muito mais eficiente!
-      const { data, error } = await supabase.rpc('get_dashboard_presenca')
-
+      // Esta função `get_dashboard_presenca` já é filtrada pela RLS,
+      // mostrando apenas os dados relevantes para o professor que fez login.
+      const { data, error } = await supabase.rpc('get_dashboard_presenca');
+      
       if (error) {
-        console.error('Erro ao buscar dados do dashboard:', error)
-        setError('Não foi possível carregar os dados do dashboard.')
+        showToast('Erro ao buscar dados para o dashboard.', 'error');
       } else {
-        // Os dados já vêm no formato que precisamos!
-        setDadosGrafico(data || [])
+        setPresencaData(data || []);
       }
-
-      setLoading(false)
+      
+      setLoading(false);
     }
 
-    fetchDadosDashboard()
-  }, []) // O array de dependências vazio garante que isso rode apenas uma vez.
+    fetchDashboardData();
+  }, [showToast]);
 
   if (loading) {
-    return <p>Carregando dados do dashboard...</p>
-  }
-
-  if (error) {
-    return <p style={{ color: 'red' }}>{error}</p>
+    return <p>A carregar dados do dashboard...</p>;
   }
 
   return (
-    <div style={{ width: '100%', height: 400 }}>
-      <h2>Dashboard - Percentual de Presença por Aluno</h2>
-      <ResponsiveContainer>
-        <BarChart
-          data={dadosGrafico}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="nome" />
-          <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-          <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-          <Legend />
-          <Bar dataKey="presenca" fill="#8884d8" name="Presença (%)" />
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-white">Dashboard do Professor</h2>
+        <p className="text-gray-400 mt-1">Visão geral do desempenho dos seus alunos.</p>
+      </div>
+
+      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+        <h3 className="font-semibold mb-4 text-lg text-white">Percentual de Presença dos Alunos</h3>
+        {presencaData.length > 0 ? (
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <BarChart
+                data={presencaData}
+                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" />
+                <XAxis dataKey="nome" stroke="#a0aec0" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#a0aec0" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#2d3748',
+                    border: '1px solid #4a5568',
+                    color: '#e2e8f0'
+                  }}
+                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Presença']}
+                />
+                <Legend wrapperStyle={{ fontSize: '14px' }} />
+                <Bar dataKey="presenca" fill="#4299E1" name="Presença (%)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <p className="text-gray-400">Não há dados de presença para exibir.</p>
+        )}
+      </div>
     </div>
-  )
+  );
 }

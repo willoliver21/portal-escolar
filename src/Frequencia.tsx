@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
+import React, { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
+import { useNotification } from './NotificationContext';
 
-// Interfaces para os nossos tipos de dados
+// Interfaces
 interface Turma {
   id: string;
   nome: string;
 }
-
 interface Aluno {
   id: string;
   nome: string;
 }
 
+// Componente
 export function Frequencia() {
+  const { showToast } = useNotification();
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [selectedTurmaId, setSelectedTurmaId] = useState<string>('');
   const [alunos, setAlunos] = useState<Aluno[]>([]);
@@ -22,61 +24,54 @@ export function Frequencia() {
   const [loadingTurmas, setLoadingTurmas] = useState(true);
   const [loadingAlunos, setLoadingAlunos] = useState(false);
 
-  // Efeito 1: Buscar as turmas do professor logado usando a nossa nova função.
+  // Efeito 1: Buscar turmas do professor
   useEffect(() => {
     async function fetchTurmas() {
       setLoadingTurmas(true);
-      
-      // Chamamos a nossa função 'get_minhas_turmas' usando rpc().
-      // Esta é a forma mais robusta e segura.
       const { data, error } = await supabase.rpc('get_minhas_turmas');
-
       if (error) {
         console.error('Erro ao buscar turmas:', error);
+        showToast('Falha ao carregar as turmas.', 'error');
       } else {
         setTurmas(data || []);
       }
       setLoadingTurmas(false);
     }
     fetchTurmas();
-  }, []);
+  }, [showToast]);
 
-  // Efeito 2: Buscar os alunos da turma selecionada.
+  // Efeito 2: Buscar alunos da turma selecionada
   useEffect(() => {
     if (!selectedTurmaId) {
       setAlunos([]);
       return;
     }
-
-    async function fetchAlunos() {
+    async function fetchAlunosDaTurma() {
       setLoadingAlunos(true);
-      // Usamos a tabela 'matriculas' para encontrar os alunos da turma.
       const { data, error } = await supabase
         .from('matriculas')
-        .select(`
-          alunos ( id, nome )
-        `)
-        .eq('turma_id', selectedTurmaId);
+        .select(`alunos(id, nome)`)
+        .eq('turma_id', selectedTurmaId)
+        .order('nome', { referencedTable: 'alunos' });
       
       if (error) {
-        console.error('Erro ao buscar alunos:', error);
+        console.error('Erro ao buscar alunos da turma:', error);
       } else if (data) {
         const alunosDaTurma = data.map(item => item.alunos).filter(Boolean) as Aluno[];
         setAlunos(alunosDaTurma);
       }
       setLoadingAlunos(false);
     }
-    fetchAlunos();
+    fetchAlunosDaTurma();
   }, [selectedTurmaId]);
 
-  // Efeito 3: Buscar as frequências existentes para a data e alunos selecionados.
+  // Efeito 3: Buscar frequências existentes
   useEffect(() => {
     async function fetchFrequencias() {
       if (!dataSelecionada || alunos.length === 0) {
         setFrequencias({});
         return;
       }
-
       const alunoIds = alunos.map(a => a.id);
       const { data, error } = await supabase
         .from('frequencias')
@@ -87,17 +82,17 @@ export function Frequencia() {
       if (error) {
         console.error('Erro ao buscar frequências:', error);
       } else {
-        const freqMap: Record<string, boolean> = {};
-        data?.forEach(f => {
-          freqMap[f.aluno_id] = f.presente;
-        });
+        const freqMap = data.reduce((acc, f) => {
+          acc[f.aluno_id] = f.presente;
+          return acc;
+        }, {} as Record<string, boolean>);
         setFrequencias(freqMap);
       }
     }
     fetchFrequencias();
   }, [dataSelecionada, alunos]);
 
-  // Função para salvar a frequência (lógica de "upsert")
+  // Função para salvar a frequência
   async function togglePresenca(alunoId: string) {
     const presenteAtual = frequencias[alunoId] ?? false;
     const novoStatus = !presenteAtual;
@@ -106,73 +101,81 @@ export function Frequencia() {
 
     const { error } = await supabase
       .from('frequencias')
-      .upsert(
-        { aluno_id: alunoId, data: dataSelecionada, presente: novoStatus },
-        { onConflict: 'aluno_id, data' }
-      );
+      .upsert({ aluno_id: alunoId, data: dataSelecionada, presente: novoStatus }, { onConflict: 'aluno_id, data' });
 
     if (error) {
       console.error('Erro ao salvar frequência:', error);
-      // Reverter o estado em caso de erro
       setFrequencias(prev => ({ ...prev, [alunoId]: presenteAtual }));
+      showToast('Erro ao salvar frequência.', 'error');
     }
   }
 
-  // Renderização do componente
-  if (loadingTurmas) {
-    return <p>A carregar as suas turmas...</p>;
-  }
-
+  // Renderização
   return (
-    <div>
-      <h2>Registo de Frequência</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white">Registo de Frequência</h2>
       
-      {turmas.length > 0 ? (
-        <>
-          <label htmlFor="turma-select">Selecione uma Turma:</label>
-          <select 
-            id="turma-select"
-            value={selectedTurmaId} 
-            onChange={e => setSelectedTurmaId(e.target.value)}
-            style={{ marginBottom: '20px', display: 'block' }}
-          >
-            <option value="">-- Por favor, escolha uma opção --</option>
-            {turmas.map(turma => (
-              <option key={turma.id} value={turma.id}>{turma.nome}</option>
-            ))}
-          </select>
+      {loadingTurmas ? <p>A carregar as suas turmas...</p> : (
+        turmas.length > 0 ? (
+          <div className="space-y-4">
+            {/* Controlos de Seleção */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="turma-select" className="block text-sm font-medium text-gray-400 mb-1">Turma</label>
+                <select 
+                  id="turma-select"
+                  value={selectedTurmaId} 
+                  onChange={e => setSelectedTurmaId(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">-- Selecione uma turma --</option>
+                  {turmas.map(turma => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="data-select" className="block text-sm font-medium text-gray-400 mb-1">Data</label>
+                <input
+                  id="data-select"
+                  type="date"
+                  value={dataSelecionada}
+                  onChange={e => setDataSelecionada(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
 
-          {selectedTurmaId && (
-            <>
-              <label htmlFor="data-select">Data:</label>
-              <input
-                id="data-select"
-                type="date"
-                value={dataSelecionada}
-                onChange={e => setDataSelecionada(e.target.value)}
-                style={{ marginBottom: '20px', display: 'block' }}
-              />
-              {loadingAlunos ? <p>A carregar alunos...</p> : (
-                <ul>
-                  {alunos.map(aluno => (
-                    <li key={aluno.id}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={frequencias[aluno.id] || false}
-                          onChange={() => togglePresenca(aluno.id)}
-                        />
-                        {aluno.nome}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          )}
-        </>
-      ) : (
-        <p>Não existem turmas associadas a si. Por favor, contacte um administrador.</p>
+            {/* Lista de Alunos */}
+            {selectedTurmaId && (
+              loadingAlunos ? <p>A carregar alunos...</p> : (
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 text-lg">Alunos</h3>
+                  <ul className="space-y-2">
+                    {alunos.map(aluno => (
+                      <li key={aluno.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-700/50">
+                        <span className="text-gray-200">{aluno.nome}</span>
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                           <span className={`text-sm ${frequencias[aluno.id] ? 'text-green-400' : 'text-gray-400'}`}>Presente</span>
+                           <div className="relative">
+                              <input
+                                 type="checkbox"
+                                 className="sr-only"
+                                 checked={frequencias[aluno.id] || false}
+                                 onChange={() => togglePresenca(aluno.id)}
+                              />
+                              <div className={`block w-10 h-6 rounded-full ${frequencias[aluno.id] ? 'bg-blue-600' : 'bg-gray-600'}`}></div>
+                              <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${frequencias[aluno.id] ? 'transform translate-x-4' : ''}`}></div>
+                           </div>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            )}
+          </div>
+        ) : (
+          <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não existem turmas associadas a si. Por favor, contacte um administrador.</p>
+        )
       )}
     </div>
   );
