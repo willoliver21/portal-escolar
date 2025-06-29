@@ -4,6 +4,7 @@ import { Auth } from './Auth'
 import { Frequencia } from './Frequencia'
 import { Notas } from './Notas'
 import { supabase } from './supabaseClient'
+import { AdminDashboard } from './AdminDashboard' // <-- Adicionar esta linha
 import './App.css';
 
 interface Profile {
@@ -17,15 +18,13 @@ export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [page, setPage] = useState<'dashboard' | 'frequencia' | 'notas'>('dashboard');
   
-  // O estado de 'loading' agora é calculado com base nos estados de sessão e perfil.
   const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
-  // Efeito 1: Apenas para ouvir o estado de autenticação.
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setIsSessionLoading(false); // A sessão foi verificada, terminamos o carregamento inicial.
+      setIsSessionLoading(false);
     });
 
     return () => {
@@ -33,15 +32,12 @@ export default function App() {
     };
   }, []);
 
-  // Efeito 2: Acionado sempre que a 'session' muda.
   useEffect(() => {
-    // Se não houver sessão, limpa o perfil e sai.
     if (!session) {
       setProfile(null);
       return;
     }
 
-    // Se houver sessão, busca o perfil.
     const fetchProfile = async () => {
       setIsProfileLoading(true);
       const { data: profileData, error } = await supabase
@@ -60,9 +56,8 @@ export default function App() {
     };
 
     fetchProfile();
-  }, [session]); // Dependência explícita na 'session'.
+  }, [session]);
 
-  // Estado de carregamento geral.
   const isLoading = isSessionLoading || isProfileLoading;
 
   if (isLoading) {
@@ -97,7 +92,10 @@ export default function App() {
       </nav>
 
       <main className="app-main">
-        {page === 'dashboard' && <Dashboard />}
+        {/* --- LÓGICA ATUALIZADA AQUI --- */}
+        {page === 'dashboard' && profile?.role === 'admin' && <AdminDashboard />}
+        {page === 'dashboard' && profile?.role !== 'admin' && <Dashboard />}
+
         {page === 'frequencia' && <Frequencia />}
         {page === 'notas' && <Notas />}
       </main>
