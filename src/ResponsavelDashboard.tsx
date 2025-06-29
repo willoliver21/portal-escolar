@@ -27,30 +27,30 @@ export function ResponsavelDashboard() {
     async function fetchAlunoData() {
       setLoading(true);
       
-      // Primeiro, buscamos qual aluno está associado ao responsável logado.
-      const { data: aluno, error: alunoError } = await supabase
-        .from('alunos')
-        .select('id, nome')
-        .eq('responsavel_id', (await supabase.auth.getUser()).data.user?.id)
+      // Usamos a nossa nova função inteligente para buscar os dados do aluno.
+      const { data: alunoInfo, error: alunoInfoError } = await supabase
+        .rpc('get_meu_aluno_info')
         .single();
         
-      if (alunoError || !aluno) {
-        console.error('Nenhum aluno encontrado para este responsável:', alunoError);
+      if (alunoInfoError || !alunoInfo) {
+        console.error('Nenhum aluno encontrado para este utilizador:', alunoInfoError);
         setLoading(false);
         return;
       }
       
+      const { aluno_id, aluno_nome } = alunoInfo;
+
       // Com o ID do aluno, buscamos as suas notas e frequências em paralelo.
       const [notasResult, frequenciasResult] = await Promise.all([
-        supabase.from('notas').select('materia, nota, data').eq('aluno_id', aluno.id),
-        supabase.from('frequencias').select('data, presente').eq('aluno_id', aluno.id)
+        supabase.from('notas').select('materia, nota, data').eq('aluno_id', aluno_id),
+        supabase.from('frequencias').select('data, presente').eq('aluno_id', aluno_id)
       ]);
       
       if (notasResult.error || frequenciasResult.error) {
         console.error('Erro ao buscar dados do aluno:', notasResult.error || frequenciasResult.error);
       } else {
         setAlunoData({
-          aluno_nome: aluno.nome,
+          aluno_nome: aluno_nome,
           notas: notasResult.data || [],
           frequencias: frequenciasResult.data || []
         });
