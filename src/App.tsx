@@ -4,7 +4,8 @@ import { Auth } from './Auth'
 import { Frequencia } from './Frequencia'
 import { Notas } from './Notas'
 import { supabase } from './supabaseClient'
-import { AdminDashboard } from './AdminDashboard' // <-- Adicionar esta linha
+import { AdminDashboard } from './AdminDashboard'
+import { ResponsavelDashboard } from './ResponsavelDashboard'; // <-- Adicionar esta linha
 import './App.css';
 
 interface Profile {
@@ -82,19 +83,22 @@ export default function App() {
       </header>
 
       <nav className="app-nav">
+        {/* Professores e Admins veem os botões de gestão */}
         {(profile?.role === 'admin' || profile?.role === 'professor') && (
           <>
             <button onClick={() => setPage('frequencia')}>Frequência</button>
             <button onClick={() => setPage('notas')}>Notas</button>
           </>
         )}
+        {/* Todos os perfis veem o botão do dashboard */}
         <button onClick={() => setPage('dashboard')}>Dashboard</button>
       </nav>
 
       <main className="app-main">
         {/* --- LÓGICA ATUALIZADA AQUI --- */}
         {page === 'dashboard' && profile?.role === 'admin' && <AdminDashboard />}
-        {page === 'dashboard' && profile?.role !== 'admin' && <Dashboard />}
+        {page === 'dashboard' && profile?.role === 'professor' && <Dashboard />}
+        {page === 'dashboard' && profile?.role === 'responsavel' && <ResponsavelDashboard />}
 
         {page === 'frequencia' && <Frequencia />}
         {page === 'notas' && <Notas />}
