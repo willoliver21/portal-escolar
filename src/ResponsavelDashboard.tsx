@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'; // CORREÇÃO: Adicionada a importação do React
+import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 
-// ... (o resto do ficheiro continua igual) ...
 interface Nota { materia: string; nota: number; data: string; }
 interface Frequencia { data: string; presente: boolean; }
 interface AlunoData { aluno_nome: string; notas: Nota[]; frequencias: Frequencia[]; }
@@ -16,17 +15,12 @@ export function ResponsavelDashboard() {
   useEffect(() => {
     async function fetchAlunoData() {
       setLoading(true);
-      
-      const { data: alunoInfo, error: alunoInfoError } = await supabase
-        .rpc('get_meu_aluno_info')
-        .single();
-        
+      const { data: alunoInfo, error: alunoInfoError } = await supabase.rpc('get_meu_aluno_info').single();
       if (alunoInfoError || !alunoInfo) {
         setLoading(false);
         return;
       }
       
-      // CORREÇÃO: Usamos uma asserção de tipo para garantir a segurança.
       const { aluno_id, aluno_nome } = alunoInfo as AlunoInfo;
 
       const [notasResult, frequenciasResult] = await Promise.all([
@@ -48,19 +42,12 @@ export function ResponsavelDashboard() {
     fetchAlunoData();
   }, [showToast]);
 
-  // ... o resto do componente continua igual ...
-    if (loading) {
-        return <p>A carregar informações do aluno...</p>;
-    }
+    if (loading) return <p>A carregar informações do aluno...</p>;
     
-    if (!alunoData) {
-        return <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não foi possível encontrar os dados do aluno. Verifique se um aluno foi associado a si no sistema.</p>;
-    }
+    if (!alunoData) return <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não foi possível encontrar os dados do aluno. Verifique se um aluno foi associado a si no sistema.</p>;
     
     const totalFaltas = alunoData.frequencias.filter(f => !f.presente).length;
-    const mediaGeral = alunoData.notas.length > 0
-        ? (alunoData.notas.reduce((acc, n) => acc + n.nota, 0) / alunoData.notas.length).toFixed(1)
-        : 'N/A';
+    const mediaGeral = alunoData.notas.length > 0 ? (alunoData.notas.reduce((acc, n) => acc + n.nota, 0) / alunoData.notas.length).toFixed(1) : 'N/A';
     
     return (
         <div className="space-y-6">
@@ -70,7 +57,6 @@ export function ResponsavelDashboard() {
             Acompanhe aqui o desempenho de <strong>{alunoData.aluno_nome}</strong>.
             </p>
         </div>
-    
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center text-center">
             <h4 className="text-gray-400 font-medium mb-2">Média Geral</h4>
@@ -81,7 +67,6 @@ export function ResponsavelDashboard() {
             <p className="text-4xl font-bold text-white">{totalFaltas}</p>
             </div>
         </div>
-        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
             <h3 className="font-semibold mb-4 text-lg text-white">Últimas Notas</h3>

@@ -1,22 +1,13 @@
-import React, { useEffect, useState } from 'react'; // CORREÇÃO: Adicionada a importação do React
+import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-// ... (o resto do ficheiro continua igual) ...
 interface PresencaData {
   nome: string;
   presenca: number;
 }
+
 export function Dashboard() {
   const { showToast } = useNotification();
   const [presencaData, setPresencaData] = useState<PresencaData[]>([]);
@@ -36,9 +27,8 @@ export function Dashboard() {
     fetchDashboardData();
   }, [showToast]);
 
-  if (loading) {
-    return <p>A carregar dados do dashboard...</p>;
-  }
+  if (loading) return <p>A carregar dados do dashboard...</p>;
+
   return (
     <div className="space-y-6">
       <div>

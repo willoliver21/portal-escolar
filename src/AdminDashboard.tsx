@@ -1,16 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface AdminStats {
   total_alunos: number;
@@ -38,7 +29,6 @@ export function AdminDashboard() {
       if (statsResult.error) {
         showToast('Erro ao buscar estatísticas do admin.', 'error');
       } else {
-        // CORREÇÃO: Usamos uma asserção de tipo para garantir a segurança.
         setStats(statsResult.data as AdminStats | null);
       }
 
@@ -47,14 +37,13 @@ export function AdminDashboard() {
       } else {
         setPresencaData(presencaResult.data || []);
       }
-
       setLoading(false);
     }
     fetchAdminData();
   }, [showToast]);
-  
-  // ... o resto do componente continua igual ...
+
   if (loading) return <p>A carregar o dashboard do administrador...</p>;
+  
   return (
     <div className="space-y-6">
       <div>

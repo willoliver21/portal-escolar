@@ -1,6 +1,5 @@
-import { createContext, useContext } from 'react'; // CORREÇÃO: Adicionada a importação do React
+import { createContext, useContext } from 'react';
 
-// ... (o resto do ficheiro continua igual) ...
 type ToastType = 'success' | 'error';
 
 interface NotificationContextType {
