@@ -135,7 +135,6 @@ export function Notas() {
       ) : (
         <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não existem turmas associadas a si. Por favor, contacte um administrador.</p>
       )
-    )}
     </div>
   );
 }
