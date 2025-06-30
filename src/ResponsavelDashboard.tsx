@@ -1,24 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; // 'React' removido
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 
-// Interfaces
-interface Nota {
-  materia: string;
-  nota: number;
-  data: string;
-}
-interface Frequencia {
-  data: string;
-  presente: boolean;
-}
-interface AlunoData {
-  aluno_nome: string;
-  notas: Nota[];
-  frequencias: Frequencia[];
-}
+// ... (interfaces continuam as mesmas) ...
+interface Nota { materia: string; nota: number; data: string; }
+interface Frequencia { data: string; presente: boolean; }
+interface AlunoData { aluno_nome: string; notas: Nota[]; frequencias: Frequencia[]; }
+// CORREÇÃO: Interface para a resposta da nossa função RPC
+interface AlunoInfo { aluno_id: string; aluno_nome: string; }
 
-// Componente
+
 export function ResponsavelDashboard() {
   const { showToast } = useNotification();
   const [alunoData, setAlunoData] = useState<AlunoData | null>(null);
@@ -29,21 +20,20 @@ export function ResponsavelDashboard() {
       setLoading(true);
       
       const { data: alunoInfo, error: alunoInfoError } = await supabase
-        .rpc('get_meu_aluno_info')
+        .rpc<AlunoInfo>('get_meu_aluno_info') // CORREÇÃO: Adicionamos o tipo aqui
         .single();
         
       if (alunoInfoError || !alunoInfo) {
-        console.error('Nenhum aluno encontrado para este utilizador:', alunoInfoError);
-        showToast('Não foi possível carregar os dados do aluno.', 'error');
+        console.error('Nenhum aluno encontrado para este responsável:', alunoInfoError);
         setLoading(false);
         return;
       }
       
-      const { aluno_id, aluno_nome } = alunoInfo;
+      const { aluno_id, aluno_nome } = alunoInfo; // Agora isto é seguro
 
       const [notasResult, frequenciasResult] = await Promise.all([
-        supabase.from('notas').select('materia, nota, data').eq('aluno_id', aluno_id).order('data', { ascending: false }),
-        supabase.from('frequencias').select('data, presente').eq('aluno_id', aluno_id).order('data', { ascending: false })
+        supabase.from('notas').select('materia, nota, data').eq('aluno_id', aluno_id),
+        supabase.from('frequencias').select('data, presente').eq('aluno_id', aluno_id)
       ]);
       
       if (notasResult.error || frequenciasResult.error) {
@@ -62,6 +52,7 @@ export function ResponsavelDashboard() {
     fetchAlunoData();
   }, [showToast]);
 
+  // ... o resto do componente continua igual ...
   if (loading) {
     return <p>A carregar informações do aluno...</p>;
   }
@@ -84,7 +75,6 @@ export function ResponsavelDashboard() {
         </p>
       </div>
 
-      {/* Resumo do Desempenho */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center text-center">
           <h4 className="text-gray-400 font-medium mb-2">Média Geral</h4>
@@ -96,7 +86,6 @@ export function ResponsavelDashboard() {
         </div>
       </div>
       
-      {/* Detalhes de Notas e Frequências */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
           <h3 className="font-semibold mb-4 text-lg text-white">Últimas Notas</h3>

@@ -1,4 +1,3 @@
-import React, { createContext, useContext } from 'react';
 
 // Definimos os tipos para o nosso contexto para garantir a segurança do código.
 type ToastType = 'success' | 'error';

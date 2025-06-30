@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; // 'React' removido
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 import {
@@ -33,13 +33,15 @@ export function AdminDashboard() {
     async function fetchAdminData() {
       setLoading(true);
       const [statsResult, presencaResult] = await Promise.all([
-        supabase.rpc('get_admin_stats').single(),
-        supabase.rpc('get_dashboard_presenca')
+        // CORREÇÃO: Informamos ao Supabase o tipo de retorno esperado
+        supabase.rpc<AdminStats>('get_admin_stats').single(),
+        supabase.rpc<PresencaData[]>('get_dashboard_presenca')
       ]);
 
       if (statsResult.error) {
         showToast('Erro ao buscar estatísticas do admin.', 'error');
       } else {
+        // Agora o 'statsResult.data' é do tipo AdminStats | null, o que é seguro.
         setStats(statsResult.data);
       }
 
@@ -55,6 +57,7 @@ export function AdminDashboard() {
     fetchAdminData();
   }, [showToast]);
 
+  // ... o resto do componente continua igual ...
   if (loading) {
     return <p>A carregar o dashboard do administrador...</p>;
   }
@@ -66,7 +69,6 @@ export function AdminDashboard() {
         <p className="text-gray-400 mt-1">Visão geral da saúde acadêmica da escola.</p>
       </div>
       
-      {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center text-center">
           <h4 className="text-gray-400 font-medium mb-2">Total de Alunos</h4>
@@ -78,26 +80,15 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Gráfico de Presença */}
       <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
         <h3 className="font-semibold mb-4 text-lg text-white">Percentual de Presença Geral</h3>
         <div style={{ width: '100%', height: 300 }}>
           <ResponsiveContainer>
-            <BarChart
-              data={presencaData}
-              margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-            >
+            <BarChart data={presencaData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" />
               <XAxis dataKey="nome" stroke="#a0aec0" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis stroke="#a0aec0" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#2d3748',
-                  border: '1px solid #4a5568',
-                  color: '#e2e8f0'
-                }}
-                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Presença']}
-              />
+              <Tooltip contentStyle={{ backgroundColor: '#2d3748', border: '1px solid #4a5568', color: '#e2e8f0' }} formatter={(value: number) => [`${value.toFixed(1)}%`, 'Presença']} />
               <Legend wrapperStyle={{ fontSize: '14px' }} />
               <Bar dataKey="presenca" fill="#4299E1" name="Presença (%)" radius={[4, 4, 0, 0]} />
             </BarChart>
