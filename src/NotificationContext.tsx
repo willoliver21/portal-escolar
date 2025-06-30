@@ -1,15 +1,14 @@
+import { createContext, useContext } from 'react'; // CORREÇÃO: Adicionada a importação do React
 
-// Definimos os tipos para o nosso contexto para garantir a segurança do código.
+// ... (o resto do ficheiro continua igual) ...
 type ToastType = 'success' | 'error';
 
 interface NotificationContextType {
   showToast: (message: string, type: ToastType) => void;
 }
 
-// Criamos o contexto que será usado para partilhar a função showToast.
 export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-// Criamos um "hook" personalizado para facilitar o uso do nosso contexto.
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {

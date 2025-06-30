@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'; // 'React' removido
+import React, { useEffect, useState } from 'react'; // CORREÇÃO: Adicionada a importação do React
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 
-// ... (interfaces continuam as mesmas) ...
+// ... (o resto do ficheiro continua igual) ...
 interface Turma { id: string; nome: string; }
 interface Aluno { id: string; nome: string; }
 interface Nota { id: string; materia: string; nota: number; data: string; }
@@ -25,7 +25,7 @@ export function Notas() {
     useEffect(() => {
       async function fetchTurmas() {
         setLoadingTurmas(true);
-        const { data, error } = await supabase.rpc<Turma>('get_minhas_turmas');
+        const { data, error } = await supabase.rpc('get_minhas_turmas');
         if (error) {
           showToast('Falha ao carregar as turmas.', 'error');
         } else {
@@ -45,18 +45,17 @@ export function Notas() {
       async function fetchAlunosDaTurma() {
         setLoadingAlunos(true);
         setSelectedAlunoId('');
-        // CORREÇÃO: Definimos explicitamente o tipo de retorno da consulta.
         const { data, error } = await supabase
-            .from('matriculas')
-            .select('alunos ( id, nome )')
-            .eq('turma_id', selectedTurmaId)
-            .order('nome', { referencedTable: 'alunos' });
+          .from('matriculas')
+          .select('alunos ( id, nome )')
+          .eq('turma_id', selectedTurmaId)
+          .order('nome', { referencedTable: 'alunos' });
         
         if (error) {
-            console.error('Erro ao buscar alunos da turma:', error);
+            showToast('Falha ao carregar os alunos.', 'error');
         } else if (data) {
-            // A conversão agora é segura.
-            const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => a !== null);
+            // CORREÇÃO: A conversão agora é segura.
+            const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => !!a);
             setAlunos(alunosDaTurma);
         }
         setLoadingAlunos(false);
@@ -93,14 +92,8 @@ export function Notas() {
           showToast('A nota deve ser um número entre 0 e 10.', 'error');
           return;
         }
-    
         setIsSubmitting(true);
-        const { data: novaNota, error } = await supabase
-          .from('notas')
-          .insert({ aluno_id: selectedAlunoId, materia, nota: valorNota, data: dataSelecionada })
-          .select()
-          .single();
-    
+        const { data: novaNota, error } = await supabase.from('notas').insert({ aluno_id: selectedAlunoId, materia, nota: valorNota, data: dataSelecionada }).select().single();
         if (error) {
           showToast('Ocorreu um erro ao adicionar a nota.', 'error');
         } else {
@@ -112,11 +105,9 @@ export function Notas() {
         setIsSubmitting(false);
       }
 
-    // ... o resto do componente continua igual ...
     return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-white">Lançamento de Notas</h2>
-          
           {loadingTurmas ? <p>A carregar as suas turmas...</p> : (
             turmas.length > 0 ? (
               <div className="space-y-4">
@@ -136,7 +127,6 @@ export function Notas() {
                     </select>
                   </div>
                 </div>
-    
                 {selectedAlunoId && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
                     <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
