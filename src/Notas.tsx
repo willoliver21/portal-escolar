@@ -37,11 +37,10 @@ export function Notas() {
     async function fetchAlunosDaTurma() {
       setLoadingAlunos(true);
       setSelectedAlunoId('');
-      const { data, error } = await supabase.from('matriculas').select('alunos(id, nome)').eq('turma_id', selectedTurmaId).order('nome', { referencedTable: 'alunos' });
+      const { data, error } = await supabase.from('matriculas').select('alunos!inner(id, nome)').eq('turma_id', selectedTurmaId).order('nome', { referencedTable: 'alunos' });
       if (error) showToast('Falha ao carregar os alunos.', 'error');
       else if (data) {
-        // CORREÇÃO: Type guard robusto.
-        const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => a !== null && typeof a === 'object');
+        const alunosDaTurma = data.map(item => item.alunos);
         setAlunos(alunosDaTurma);
       }
       setLoadingAlunos(false);
