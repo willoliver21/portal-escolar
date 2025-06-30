@@ -6,16 +6,16 @@ import { AdminDashboard } from './AdminDashboard';
 import { ResponsavelDashboard } from './ResponsavelDashboard';
 import { Frequencia } from './Frequencia';
 import { Notas } from './Notas';
+import { Secretaria } from './Secretaria';
 import { Toast } from './Toast';
 import { NotificationContext } from './NotificationContext';
-// Importar os ícones que vamos usar
-import { LayoutDashboard, CheckSquare, GraduationCap, LogOut } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, GraduationCap, LogOut, ClipboardList } from 'lucide-react';
 
 // Interfaces
 interface Profile {
   id: string;
   full_name: string;
-  role: 'admin' | 'professor' | 'responsavel' | 'aluno';
+  role: 'admin' | 'professor' | 'responsavel' | 'aluno' | 'secretaria';
 }
 interface ToastState {
   message: string;
@@ -27,7 +27,7 @@ interface ToastState {
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [page, setPage] = useState<'dashboard' | 'frequencia' | 'notas'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'frequencia' | 'notas' | 'secretaria'>('dashboard');
   const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>({ message: '', type: 'success', visible: false });
@@ -51,6 +51,7 @@ export default function App() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setPage('dashboard');
       setIsSessionLoading(false);
     });
     return () => subscription.unsubscribe();
@@ -80,39 +81,50 @@ export default function App() {
   // Renderização do App
   return (
     <NotificationContext.Provider value={{ showToast }}>
-      <div className="min-h-screen bg-gradient-to-br from-green-300 via-cyan-500 to-blue-700 text-gray-200">
+      <div className="min-h-screen bg-gray-900 text-gray-200">
         {isLoading && <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50"><p>A carregar...</p></div>}
         
         {!session && !isLoading ? <Auth /> : (
           session && !isLoading && profile && (
-            <div className="flex p-4 gap-4 min-h-screen">
+            <div className="flex">
               {/* Barra Lateral de Navegação */}
-              <aside className="w-64 bg-gray-900/40 backdrop-blur-lg p-6 rounded-2xl border border-white/20 flex flex-col h-[calc(100vh-2rem)]">
+              <aside className="w-64 bg-gray-800 p-4 border-r border-gray-700 flex flex-col h-screen">
                 <div className="text-center py-4">
                   <h1 className="text-2xl font-bold text-white">Portal Escolar</h1>
                 </div>
                 <nav className="flex flex-col space-y-2 flex-grow mt-8">
                   <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={page === 'dashboard'} onClick={() => setPage('dashboard')} />
-                  {(profile.role === 'admin' || profile.role === 'professor') && (
+                  
+                  {/* Professores veem Frequência e Notas */}
+                  {profile.role === 'professor' && (
                     <>
                       <NavItem icon={<CheckSquare size={20} />} label="Frequência" active={page === 'frequencia'} onClick={() => setPage('frequencia')} />
                       <NavItem icon={<GraduationCap size={20} />} label="Notas" active={page === 'notas'} onClick={() => setPage('notas')} />
                     </>
                   )}
+
+                  {/* Secretaria e Admin veem Gestão e Frequência */}
+                  {(profile.role === 'admin' || profile.role === 'secretaria') && (
+                    <>
+                       <NavItem icon={<ClipboardList size={20} />} label="Gestão" active={page === 'secretaria'} onClick={() => setPage('secretaria')} />
+                       <NavItem icon={<CheckSquare size={20} />} label="Frequência" active={page === 'frequencia'} onClick={() => setPage('frequencia')} />
+                    </>
+                  )}
+
                 </nav>
                 <div className="mt-auto">
-                   <div className="p-3 bg-black/30 rounded-lg mb-4">
+                   <div className="p-3 bg-gray-700/50 rounded-lg mb-4">
                       <div className="flex items-center space-x-3">
-                         <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center font-bold text-white">
+                         <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white">
                            {profile.full_name?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase()}
                          </div>
                          <div>
                             <p className="font-semibold text-sm text-white">{profile.full_name}</p>
-                            <p className="text-xs text-gray-300 capitalize">{profile.role}</p>
+                            <p className="text-xs text-gray-400 capitalize">{profile.role}</p>
                          </div>
                       </div>
                    </div>
-                   <button onClick={() => supabase.auth.signOut()} className="w-full flex items-center justify-center space-x-2 p-2 rounded-md text-sm text-red-300 bg-red-900/50 hover:bg-red-900/80 transition-colors">
+                   <button onClick={() => supabase.auth.signOut()} className="w-full flex items-center justify-center space-x-2 p-2 rounded-md text-sm text-red-300 bg-red-800/50 hover:bg-red-800/80 transition-colors">
                       <LogOut size={16} />
                       <span>Sair</span>
                    </button>
@@ -120,13 +132,16 @@ export default function App() {
               </aside>
 
               {/* Conteúdo Principal */}
-              <main className="flex-1 overflow-y-auto h-[calc(100vh-2rem)]">
-                <div className="bg-gray-900/40 backdrop-blur-lg border border-white/20 text-white p-6 md:p-8 rounded-2xl shadow-2xl h-full">
+              <main className="flex-1 p-6 md:p-8 overflow-y-auto h-screen">
+                <div className="bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700 h-full">
                   {page === 'dashboard' && profile.role === 'admin' && <AdminDashboard />}
                   {page === 'dashboard' && profile.role === 'professor' && <Dashboard />}
                   {page === 'dashboard' && (profile.role === 'responsavel' || profile.role === 'aluno') && <ResponsavelDashboard />}
-                  {page === 'frequencia' && <Frequencia />}
+                  
+                  {/* Renderização das páginas de gestão */}
+                  {page === 'frequencia' && profile && <Frequencia profile={profile} />}
                   {page === 'notas' && <Notas />}
+                  {page === 'secretaria' && <Secretaria />}
                 </div>
               </main>
             </div>
@@ -143,7 +158,7 @@ const NavItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, labe
   <button
     onClick={onClick}
     className={`flex items-center space-x-3 p-3 rounded-lg text-sm font-medium transition-colors w-full text-left ${
-      active ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg' : 'text-gray-200 hover:bg-black/20 hover:text-white'
+      active ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
     }`}
   >
     {icon}
