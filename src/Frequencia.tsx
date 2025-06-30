@@ -31,15 +31,16 @@ export function Frequencia() {
       async function fetchAlunosDaTurma() {
         setLoadingAlunos(true);
         const { data, error } = await supabase.from('matriculas').select('alunos(id, nome)').eq('turma_id', selectedTurmaId).order('nome', { referencedTable: 'alunos' });
-        if (error) console.error('Erro ao buscar alunos da turma:', error);
-        else if (data) {
-          const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => a != null && typeof a === 'object' && 'id' in a);
-          setAlunos(alunosDaTurma);
+        if (error) {
+          showToast('Erro ao buscar alunos da turma.', 'error');
+        } else if (data) {
+          const alunosDaTurma = data.flatMap(item => item.alunos || []).filter(Boolean);
+          setAlunos(alunosDaTurma as Aluno[]);
         }
         setLoadingAlunos(false);
       }
       fetchAlunosDaTurma();
-    }, [selectedTurmaId]);
+    }, [selectedTurmaId, showToast]);
     
     useEffect(() => {
       if (!dataSelecionada || alunos.length === 0) { setFrequencias({}); return; }
