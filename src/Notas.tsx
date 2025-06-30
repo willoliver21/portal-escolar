@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 
@@ -134,7 +134,7 @@ export function Notas() {
         </div>
       ) : (
         <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não existem turmas associadas a si. Por favor, contacte um administrador.</p>
-      )
+      )}
     </div>
   );
 }
