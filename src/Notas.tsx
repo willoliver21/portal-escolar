@@ -87,15 +87,15 @@ export function Notas() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="turma-select-notas" className="block text-sm font-medium text-gray-400 mb-1">Turma</label>
-                  <select id="turma-select-notas" value={selectedTurmaId} onChange={e => setSelectedTurmaId(e.target.value)} className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <label htmlFor="turma-select-notas" className="block text-sm font-medium text-gray-300 mb-1">Turma</label>
+                  <select id="turma-select-notas" value={selectedTurmaId} onChange={e => setSelectedTurmaId(e.target.value)} className="w-full px-4 py-2 bg-black/20 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400">
                     <option value="">-- Selecione uma turma --</option>
                     {turmas.map(turma => <option key={turma.id} value={turma.id}>{turma.nome}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="aluno-select-notas" className="block text-sm font-medium text-gray-400 mb-1">Aluno</label>
-                  <select id="aluno-select-notas" value={selectedAlunoId} onChange={e => setSelectedAlunoId(e.target.value)} disabled={loadingAlunos || !selectedTurmaId} className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
+                  <label htmlFor="aluno-select-notas" className="block text-sm font-medium text-gray-300 mb-1">Aluno</label>
+                  <select id="aluno-select-notas" value={selectedAlunoId} onChange={e => setSelectedAlunoId(e.target.value)} disabled={loadingAlunos || !selectedTurmaId} className="w-full px-4 py-2 bg-black/20 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50">
                     <option value="">{loadingAlunos ? 'A carregar...' : '-- Selecione um aluno --'}</option>
                     {alunos.map(aluno => <option key={aluno.id} value={aluno.id}>{aluno.nome}</option>)}
                   </select>
@@ -103,28 +103,28 @@ export function Notas() {
               </div>
               {selectedAlunoId && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                  <div className="bg-black/20 border border-white/10 rounded-lg p-4">
                     <h3 className="font-semibold mb-4 text-lg">Lançar Nova Nota</h3>
                     <form onSubmit={handleAdicionarNota} className="space-y-4">
-                      <input type="text" placeholder="Matéria" value={materia} onChange={e => setMateria(e.target.value)} required className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      <input type="number" placeholder="Nota (0-10)" value={notaInput} onChange={e => setNotaInput(e.target.value)} step="0.1" min="0" max="10" required className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)} required className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      <button type="submit" disabled={isSubmitting} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-600 transition-colors">
+                      <input type="text" placeholder="Matéria" value={materia} onChange={e => setMateria(e.target.value)} required className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400" />
+                      <input type="number" placeholder="Nota (0-10)" value={notaInput} onChange={e => setNotaInput(e.target.value)} step="0.1" min="0" max="10" required className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400" />
+                      <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)} required className="w-full px-4 py-2 bg-black/30 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400" />
+                      <button type="submit" disabled={isSubmitting} className="w-full px-4 py-2 font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 rounded-md hover:opacity-90 disabled:opacity-50 transition-all">
                         {isSubmitting ? 'A adicionar...' : 'Adicionar Nota'}
                       </button>
                     </form>
                   </div>
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                  <div className="bg-black/20 border border-white/10 rounded-lg p-4">
                     <h3 className="font-semibold mb-4 text-lg">Notas Lançadas</h3>
                     {loadingNotas ? <p>A carregar notas...</p> : (
                       <ul className="space-y-2">
                         {notas.length > 0 ? notas.map(nota => (
-                          <li key={nota.id} className="flex justify-between items-center p-2 rounded-md hover:bg-gray-700/50">
+                          <li key={nota.id} className="flex justify-between items-center p-2 rounded-md hover:bg-black/20">
                             <div>
                                <span className="font-medium">{nota.materia}</span>
                                <span className="text-xs text-gray-400 block">{new Date(nota.data + 'T00:00:00').toLocaleDateString()}</span>
                             </div>
-                            <span className={`px-2 py-1 text-sm font-bold rounded-md ${nota.nota >= 6 ? 'bg-green-800/50 text-green-300' : 'bg-red-800/50 text-red-300'}`}>{nota.nota.toFixed(1)}</span>
+                            <span className={`px-2 py-1 text-sm font-bold rounded-md ${nota.nota >= 6 ? 'bg-green-900/70 text-green-300' : 'bg-red-900/70 text-red-300'}`}>{nota.nota.toFixed(1)}</span>
                           </li>
                         )) : <p className="text-gray-400 text-sm">Nenhuma nota lançada para este aluno ainda.</p>}
                       </ul>

@@ -99,7 +99,7 @@ export function Auth() {
           </form>
 
           <p className="text-xs text-center text-gray-300 pt-6">
-            © 2024 Portal Escolar. Todos os direitos reservados.
+            © 2025 Portal Escolar TL. Todos os direitos reservados.
           </p>
         </div>
       </div>

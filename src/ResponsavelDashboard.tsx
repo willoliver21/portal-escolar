@@ -53,41 +53,41 @@ export function ResponsavelDashboard() {
         <div className="space-y-6">
         <div>
             <h2 className="text-2xl font-bold text-white">Painel do Aluno</h2>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-300 mt-1">
             Acompanhe aqui o desempenho de <strong>{alunoData.aluno_nome}</strong>.
             </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-            <h4 className="text-gray-400 font-medium mb-2">Média Geral</h4>
-            <p className="text-4xl font-bold text-white">{mediaGeral}</p>
+            <div className="bg-black/20 border border-white/10 rounded-lg p-6 flex flex-col items-center justify-center text-center">
+              <h4 className="text-gray-300 font-medium mb-2">Média Geral</h4>
+              <p className="text-4xl font-bold text-white">{mediaGeral}</p>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-            <h4 className="text-gray-400 font-medium mb-2">Total de Faltas</h4>
-            <p className="text-4xl font-bold text-white">{totalFaltas}</p>
+            <div className="bg-black/20 border border-white/10 rounded-lg p-6 flex flex-col items-center justify-center text-center">
+              <h4 className="text-gray-300 font-medium mb-2">Total de Faltas</h4>
+              <p className="text-4xl font-bold text-white">{totalFaltas}</p>
             </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+            <div className="bg-black/20 border border-white/10 rounded-lg p-4">
             <h3 className="font-semibold mb-4 text-lg text-white">Últimas Notas</h3>
             <ul className="space-y-2">
                 {alunoData.notas.slice(0, 5).map((nota, index) => (
-                <li key={index} className="flex justify-between items-center p-2 rounded-md hover:bg-gray-700/50">
+                <li key={index} className="flex justify-between items-center p-2 rounded-md hover:bg-black/20">
                     <div>
                     <span className="font-medium text-gray-200">{nota.materia}</span>
                     <span className="text-xs text-gray-400 block">{new Date(nota.data + 'T00:00:00').toLocaleDateString()}</span>
                     </div>
-                    <span className={`px-2 py-1 text-sm font-bold rounded-md ${nota.nota >= 6 ? 'bg-green-800/50 text-green-300' : 'bg-red-800/50 text-red-300'}`}>{nota.nota.toFixed(1)}</span>
+                    <span className={`px-2 py-1 text-sm font-bold rounded-md ${nota.nota >= 6 ? 'bg-green-900/70 text-green-300' : 'bg-red-900/70 text-red-300'}`}>{nota.nota.toFixed(1)}</span>
                 </li>
                 ))}
                 {alunoData.notas.length === 0 && <p className="text-gray-400 text-sm">Nenhuma nota lançada.</p>}
             </ul>
             </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+            <div className="bg-black/20 border border-white/10 rounded-lg p-4">
             <h3 className="font-semibold mb-4 text-lg text-white">Últimas Frequências</h3>
             <ul className="space-y-2">
                 {alunoData.frequencias.slice(0, 5).map((freq, index) => (
-                <li key={index} className="flex justify-between items-center p-2 rounded-md hover:bg-gray-700/50">
+                <li key={index} className="flex justify-between items-center p-2 rounded-md hover:bg-black/20">
                     <span className="font-medium text-gray-200">{new Date(freq.data + 'T00:00:00').toLocaleDateString()}</span>
                     <span className={`font-semibold ${freq.presente ? 'text-green-400' : 'text-red-400'}`}>
                     {freq.presente ? 'Presente' : 'Falta'}
