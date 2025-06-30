@@ -1,41 +1,52 @@
 # Portal Escolar - Plataforma de Gestão Acadêmica
 
-![Banner do Portal Escolar](https://placehold.co/1200x400/646cff/FFFFFF?text=Portal+Escolar)
+![Banner do Portal Escolar](https://placehold.co/1200x400/06b6d4/FFFFFF?text=Portal+Escolar)
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
   <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite">
   <img src="https://img.shields.io/badge/Supabase-181818?style=for-the-badge&logo=supabase&logoColor=3ECF8E" alt="Supabase">
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
 </p>
 
 ## 📌 Sobre o Projeto
 
-O **Portal Escolar** é uma plataforma web moderna desenhada para digitalizar e otimizar a gestão acadêmica de instituições de ensino. O sistema centraliza o registo de notas e frequência, oferecendo dashboards intuitivos para análise de desempenho e permitindo que professores, administradores, alunos e responsáveis acedam a informações cruciais de forma segura e segmentada.
+O **Portal Escolar** é uma plataforma web moderna e responsiva, desenhada para digitalizar e otimizar a gestão acadêmica. Com uma interface de utilizador elegante, que utiliza um fundo em gradiente e elementos com efeito de "vidro" (Glassmorphism), o sistema oferece uma experiência visualmente apelativa e intuitiva.
 
-O projeto foi construído com uma stack de tecnologias modernas, focada em performance, escalabilidade e uma excelente experiência de utilizador.
+A plataforma centraliza o registo de notas e frequência, permitindo que professores, administradores, e responsáveis acedam a informações cruciais de forma segura e segmentada através de painéis de controlo dedicados.
+
+---
+
+## 📸 Capturas de Ecrã
+
+*(Sugestão: Adicione aqui as novas capturas de ecrã do projeto para mostrar o design atualizado!)*
+
+| Tela de Login | Dashboard do Administrador |
+| :-----------: | :------------------------: |
+| *(imagem)* | *(imagem)* |
+
+| Lançamento de Notas | Registo de Frequência |
+| :-----------: | :------------------------: |
+| *(imagem)* | *(imagem)* |
+
 
 ---
 
 ## ✨ Funcionalidades Implementadas
 
-Atualmente, a plataforma conta com as seguintes funcionalidades:
-
-* **Autenticação Segura:** Sistema de login por email e senha.
-* **Controlo de Acesso por Perfil (RLS):**
-    * **Professor:** Acesso restrito às suas próprias turmas.
-    * **Admin:** Acesso total aos dados da escola.
-    * **Responsável / Aluno:** (Em desenvolvimento) Acesso apenas aos seus próprios dados.
-* **Gestão de Frequência:** Professores podem selecionar uma turma e registar a presença ou ausência dos alunos para uma data específica.
-* **Lançamento de Notas:** Professores podem selecionar uma turma, um aluno e lançar notas por matéria e data.
-* **Dashboard de Desempenho:** Visualização de gráficos com dados agregados (atualmente, percentual de presença por aluno).
+*   **Autenticação Segura:** Ecrã de login moderno com validação de utilizador via Supabase.
+*   **Interface Unificada:** Todas as telas partilham uma identidade visual coesa, com fundo em gradiente e componentes com efeito de "vidro".
+*   **Controlo de Acesso por Perfil (RLS):**
+    *   **Administrador:** Acesso a um dashboard com estatísticas chave da escola (total de alunos, turmas) e um gráfico de percentual de presença geral.
+    *   **Professor:** Acesso a painéis dedicados para o lançamento de notas e o registo de frequência dos alunos nas suas turmas.
+    *   **Responsável / Aluno:** Acesso a um painel de controlo que exibe a média geral, o total de faltas, e as listas das últimas notas e presenças do aluno.
+*   **Gestão de Frequência:** Interface intuitiva para professores marcarem a presença dos alunos por data, com um *toggle switch* moderno.
+*   **Lançamento de Notas:** Formulário dedicado para que professores possam lançar notas por matéria, aluno e data.
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
-
-A arquitetura do projeto foi pensada para ser robusta, rápida e escalável, utilizando as seguintes tecnologias:
 
 | Tecnologia | Função no Projeto |
 | :--- | :--- |
@@ -44,7 +55,9 @@ A arquitetura do projeto foi pensada para ser robusta, rápida e escalável, uti
 | **TypeScript** | Garante a segurança e a previsibilidade do código através da tipagem estática. |
 | **Supabase** | Backend-as-a-Service que oferece banco de dados PostgreSQL, autenticação e APIs. |
 | **PostgreSQL** | Banco de dados relacional poderoso, utilizado pelo Supabase. |
+| **Tailwind CSS** | Framework de eleição para a criação de uma interface de utilizador moderna e responsiva, com suporte para o efeito de *glassmorphism*. |
 | **Recharts** | Biblioteca para a criação de gráficos e dashboards interativos. |
+| **Lucide React** | Biblioteca de ícones leve e customizável para uma UI mais limpa. |
 
 ---
 
@@ -70,7 +83,7 @@ Para executar o projeto no seu ambiente de desenvolvimento, siga os passos abaix
     ```
 
 3.  **Configure as Variáveis de Ambiente:**
-    * Crie um ficheiro chamado `.env.local` na raiz do projeto.
+    * Crie um ficheiro chamado `.env` na raiz do projeto.
     * Adicione as suas chaves do projeto Supabase a este ficheiro:
         ```env
         VITE_SUPABASE_URL="[https://sua-url-do-projeto.supabase.co](https://sua-url-do-projeto.supabase.co)"
@@ -104,10 +117,12 @@ A estrutura atual do banco de dados está organizada da seguinte forma:
 
 O projeto está em desenvolvimento ativo. As próximas funcionalidades planeadas são:
 
--   [ ] **Desenvolver a Área do Responsável:** Permitir que pais e responsáveis visualizem as notas e frequências dos seus filhos.
--   [ ] **Melhorar os Dashboards:** Adicionar mais métricas e gráficos para a gestão.
--   [ ] **Integração com IA:** Utilizar o ChatGPT para gerar relatórios automáticos de desempenho para os pais.
+-   [x] **Desenvolver a Área do Responsável:** Permitir que pais e responsáveis visualizem as notas e frequências dos seus filhos.
+-   [x] **Modernizar a Interface do Utilizador:** Implementar um design coeso em toda a aplicação.
+-   [ ] **Melhorar os Dashboards:** Adicionar mais métricas e gráficos para a gestão (ex: média de notas por turma, evolução do aluno).
 -   [ ] **Notificações Automáticas:** Criar alertas para responsáveis quando um aluno atingir um determinado número de faltas ou notas baixas.
+-   [ ] **Refatorar para Componentes Reutilizáveis:** Otimizar o código, criando componentes genéricos para tabelas, cartões e inputs.
+-   [ ] **Testes Automatizados:** Implementar testes unitários e de integração para garantir a estabilidade do código.
 
 ---
 
