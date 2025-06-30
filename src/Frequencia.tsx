@@ -1,18 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 
-// Tipos
-type StatusFrequencia = 'presente' | 'falta' | 'atestado' | 'ausente';
-interface Profile {
-  id: string;
-  full_name: string;
-  role: 'admin' | 'professor' | 'responsavel' | 'aluno' | 'secretaria';
-}
 interface Turma { id: string; nome: string; }
 interface Aluno { id: string; nome: string; }
+type StatusFrequencia = 'presente' | 'falta' | 'atestado' | 'ausente';
+interface Profile { id: string; full_name: string; role: 'admin' | 'professor' | 'responsavel' | 'aluno' | 'secretaria'; }
 
-// Componente
 export function Frequencia({ profile }: { profile: Profile }) {
   const { showToast } = useNotification();
   const [turmas, setTurmas] = useState<Turma[]>([]);
@@ -20,17 +14,10 @@ export function Frequencia({ profile }: { profile: Profile }) {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [frequencias, setFrequencias] = useState<Record<string, StatusFrequencia>>({});
   const [dataSelecionada, setDataSelecionada] = useState(() => new Date().toISOString().slice(0, 10));
-
   const [loadingTurmas, setLoadingTurmas] = useState(true);
   const [loadingAlunos, setLoadingAlunos] = useState(false);
 
-  // Define as opções disponíveis no menu dropdown com base no perfil
-  const statusOptions: StatusFrequencia[] = 
-    profile.role === 'professor'
-      ? ['presente', 'falta']
-      : ['presente', 'falta', 'atestado', 'ausente'];
-
-  // Mapeia cada status para um estilo visual
+  const statusOptions: StatusFrequencia[] = profile.role === 'professor' ? ['presente', 'falta'] : ['presente', 'falta', 'atestado', 'ausente'];
   const statusStyles: Record<StatusFrequencia, string> = {
     presente: 'bg-green-800/50 text-green-300',
     falta: 'bg-red-800/50 text-red-300',
@@ -38,13 +25,11 @@ export function Frequencia({ profile }: { profile: Profile }) {
     ausente: 'bg-yellow-800/50 text-yellow-300',
   };
 
-  // ... (os useEffects para buscar dados continuam iguais) ...
   useEffect(() => {
     async function fetchTurmas() {
       setLoadingTurmas(true);
       const rpcCall = (profile.role === 'admin' || profile.role === 'secretaria') ? 'get_todas_as_turmas' : 'get_minhas_turmas';
       const { data, error } = await supabase.rpc(rpcCall);
-
       if (error) showToast('Falha ao carregar as turmas.', 'error');
       else setTurmas(data || []);
       setLoadingTurmas(false);
@@ -59,7 +44,8 @@ export function Frequencia({ profile }: { profile: Profile }) {
       const { data, error } = await supabase.from('matriculas').select('alunos(id, nome)').eq('turma_id', selectedTurmaId).order('nome', { referencedTable: 'alunos' });
       if (error) console.error('Erro ao buscar alunos da turma:', error);
       else if (data) {
-        const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => !!a);
+        // CORREÇÃO: Type guard robusto para garantir que o objeto 'alunos' não é nulo.
+        const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => a !== null && typeof a === 'object');
         setAlunos(alunosDaTurma);
       }
       setLoadingAlunos(false);
@@ -84,11 +70,7 @@ export function Frequencia({ profile }: { profile: Profile }) {
   async function handleStatusChange(alunoId: string, novoStatus: StatusFrequencia) {
     const statusAtual = frequencias[alunoId];
     setFrequencias(prev => ({ ...prev, [alunoId]: novoStatus }));
-
-    const { error } = await supabase
-      .from('frequencias')
-      .upsert({ aluno_id: alunoId, data: dataSelecionada, status: novoStatus }, { onConflict: 'aluno_id, data' });
-
+    const { error } = await supabase.from('frequencias').upsert({ aluno_id: alunoId, data: dataSelecionada, status: novoStatus }, { onConflict: 'aluno_id, data' });
     if (error) {
       console.error('Erro ao salvar frequência:', error);
       setFrequencias(prev => ({ ...prev, [alunoId]: statusAtual }));
@@ -123,22 +105,15 @@ export function Frequencia({ profile }: { profile: Profile }) {
                     {alunos.map(aluno => {
                       const statusAtual = frequencias[aluno.id];
                       const isLocked = profile.role === 'professor' && (statusAtual === 'atestado' || statusAtual === 'ausente');
-
                       return (
                         <li key={aluno.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-700/50">
                           <span className={`text-gray-200 ${isLocked ? 'opacity-60' : ''}`}>{aluno.nome}</span>
-
-                          {/* LÓGICA ATUALIZADA AQUI */}
                           {isLocked ? (
                             <span className={`px-3 py-1 text-sm font-bold rounded-md capitalize ${statusStyles[statusAtual]}`}>
                               {statusAtual}
                             </span>
                           ) : (
-                            <select
-                              value={statusAtual || 'presente'}
-                              onChange={(e) => handleStatusChange(aluno.id, e.target.value as StatusFrequencia)}
-                              className={`px-3 py-1 bg-gray-700 border border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize`}
-                            >
+                            <select value={statusAtual || 'presente'} onChange={(e) => handleStatusChange(aluno.id, e.target.value as StatusFrequencia)} className={`px-3 py-1 bg-gray-700 border border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize`}>
                               {statusOptions.map(status => (
                                 <option key={status} value={status} className="capitalize">{status}</option>
                               ))}

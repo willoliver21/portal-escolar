@@ -1,15 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 
-// Interfaces
-type StatusFrequencia = 'presente' | 'falta' | 'atestado' | 'ausente';
 interface Nota { materia: string; nota: number; data: string; }
-interface Frequencia { data: string; status: StatusFrequencia; }
+interface Frequencia { data: string; status: 'presente' | 'falta' | 'atestado' | 'ausente'; }
 interface AlunoData { aluno_nome: string; notas: Nota[]; frequencias: Frequencia[]; }
 interface AlunoInfo { aluno_id: string; aluno_nome: string; }
 
-// Componente
 export function ResponsavelDashboard() {
   const { showToast } = useNotification();
   const [alunoData, setAlunoData] = useState<AlunoData | null>(null);
@@ -19,17 +16,15 @@ export function ResponsavelDashboard() {
     async function fetchAlunoData() {
       setLoading(true);
       const { data: alunoInfo, error: alunoInfoError } = await supabase.rpc('get_meu_aluno_info').single();
-      if (alunoInfoError || !alunoInfo) {
-        setLoading(false);
-        return;
-      }
+      if (alunoInfoError || !alunoInfo) { setLoading(false); return; }
+      
       const { aluno_id, aluno_nome } = alunoInfo as AlunoInfo;
 
       const [notasResult, frequenciasResult] = await Promise.all([
-        supabase.from('notas').select('materia, nota, data').eq('aluno_id', aluno_id).order('data', { ascending: false }),
-        supabase.from('frequencias').select('data, status').eq('aluno_id', aluno_id).order('data', { ascending: false })
+        supabase.from('notas').select('materia, nota, data').eq('aluno_id', aluno_id),
+        supabase.from('frequencias').select('data, status').eq('aluno_id', aluno_id)
       ]);
-
+      
       if (notasResult.error || frequenciasResult.error) {
         showToast('Erro ao buscar detalhes do aluno.', 'error');
       } else {
@@ -46,12 +41,10 @@ export function ResponsavelDashboard() {
 
   if (loading) return <p>A carregar informações do aluno...</p>;
   if (!alunoData) return <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não foi possível encontrar os dados do aluno.</p>;
-
-  // Lógica de cálculo atualizada
+  
   const totalFaltas = alunoData.frequencias.filter(f => f.status === 'falta' || f.status === 'ausente').length;
   const mediaGeral = alunoData.notas.length > 0 ? (alunoData.notas.reduce((acc, n) => acc + n.nota, 0) / alunoData.notas.length).toFixed(1) : 'N/A';
-
-  const statusMap: Record<StatusFrequencia, { text: string; color: string }> = {
+  const statusMap = {
     presente: { text: 'Presente', color: 'text-green-400' },
     falta: { text: 'Falta', color: 'text-red-400' },
     atestado: { text: 'Atestado', color: 'text-blue-400' },
