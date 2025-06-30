@@ -38,10 +38,11 @@ export function Notas() {
         setLoadingAlunos(true);
         setSelectedAlunoId('');
         const { data, error } = await supabase.from('matriculas').select('alunos(id, nome)').eq('turma_id', selectedTurmaId).order('nome', { referencedTable: 'alunos' });
-        if (error) showToast('Falha ao carregar os alunos.', 'error');
-        else if (data) {
-          const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => a != null && typeof a === 'object' && 'id' in a);
-          setAlunos(alunosDaTurma);
+        if (error) {
+          showToast('Falha ao carregar os alunos.', 'error');
+        } else if (data) {
+          const alunosDaTurma = data.flatMap(item => item.alunos || []).filter(Boolean);
+          setAlunos(alunosDaTurma as Aluno[]);
         }
         setLoadingAlunos(false);
       }
@@ -134,8 +135,7 @@ export function Notas() {
             </div>
           ) : (
             <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não existem turmas associadas a si. Por favor, contacte um administrador.</p>
-          )
-        )}
-      </div>
+          )}
+        </div>
     );
 }
