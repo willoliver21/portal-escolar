@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from './supabaseClient'
-import schoolIllustration from './assets/react.svg' // Placeholder: substitua pela ilustração desejada
+import teacherIllustration from './assets/teacher-illustration.jpg'
 
 export function Auth() {
   const [loading, setLoading] = useState(false)
@@ -32,15 +32,19 @@ export function Auth() {
       <div className="flex w-full max-w-4xl bg-gray-900/20 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-100/20">
         
         {/* Lado esquerdo: Ilustração */}
-        <div className="hidden md:flex w-1/2 items-center justify-center p-12">
-          {/* Pode substituir este SVG por uma imagem mais adequada */}
-          <img src={schoolIllustration} alt="Ilustração Escolar" className="w-full h-auto max-w-sm" />
+        <div className="hidden md:flex w-1/2 items-center justify-center bg-gray-900/10">
+          <img 
+            src={teacherIllustration} 
+            alt="Professora a segurar um tablet" 
+            className="w-full h-full object-cover" 
+          />
         </div>
 
         {/* Lado direito: Formulário */}
         <div className="w-full md:w-1/2 p-8 space-y-6 text-white">
           <div className="text-center">
-            <h1 className="text-3xl font-bold">Student Login Form</h1>
+            <h1 className="text-3xl font-bold">Portal Escolar</h1>
+            <p className="text-gray-300 mt-2">Bem-vindo(a) de volta!</p>
           </div>
           
           <form onSubmit={handleLogin} className="space-y-4">
@@ -51,7 +55,7 @@ export function Auth() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email"
+                placeholder="Seu email"
                 required
                 disabled={loading}
               />
@@ -63,7 +67,7 @@ export function Auth() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="password"
+                placeholder="Senha"
                 required
                 disabled={loading}
               />
@@ -79,7 +83,7 @@ export function Auth() {
                 className="h-4 w-4 rounded border-gray-500 bg-gray-800 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300 cursor-pointer">
-                Remember me
+                Lembrar-me
               </label>
             </div>
 
@@ -90,7 +94,7 @@ export function Auth() {
               type="submit" 
               disabled={loading}
             >
-              {loading ? 'A entrar...' : 'Login'}
+              {loading ? 'A entrar...' : 'Entrar'}
             </button>
           </form>
 
