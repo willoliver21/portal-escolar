@@ -41,23 +41,35 @@ export function Frequencia({ profile }: { profile: Profile }) {
     if (!selectedTurmaId) { setAlunos([]); return; }
     async function fetchAlunosDaTurma() {
       setLoadingAlunos(true);
-      // CORREÇÃO: Usamos !inner para garantir que a relação existe e o tipo é inferido corretamente.
-      const { data, error } = await supabase
+      // CORREÇÃO: Fazemos a consulta em duas etapas para garantir a segurança dos tipos.
+      const { data: matriculas, error: matriculasError } = await supabase
         .from('matriculas')
-        .select('alunos!inner(id, nome)')
-        .eq('turma_id', selectedTurmaId)
-        .order('nome', { referencedTable: 'alunos' });
+        .select('aluno_id')
+        .eq('turma_id', selectedTurmaId);
       
-      if (error) {
-        console.error('Erro ao buscar alunos da turma:', error);
-      } else if (data) {
-        const alunosDaTurma = data.map(item => item.alunos);
-        setAlunos(alunosDaTurma);
+      if (matriculasError || !matriculas || matriculas.length === 0) {
+        setAlunos([]);
+        setLoadingAlunos(false);
+        if (matriculasError) console.error('Erro ao buscar matrículas:', matriculasError);
+        return;
+      }
+
+      const alunoIds = matriculas.map(m => m.aluno_id);
+      const { data: alunosData, error: alunosError } = await supabase
+        .from('alunos')
+        .select('id, nome')
+        .in('id', alunoIds)
+        .order('nome');
+      
+      if (alunosError) {
+        showToast('Falha ao carregar os alunos da turma.', 'error');
+      } else {
+        setAlunos(alunosData || []);
       }
       setLoadingAlunos(false);
     }
     fetchAlunosDaTurma();
-  }, [selectedTurmaId]);
+  }, [selectedTurmaId, showToast]);
 
   useEffect(() => {
     if (!dataSelecionada || alunos.length === 0) { setFrequencias({}); return; }
@@ -78,7 +90,6 @@ export function Frequencia({ profile }: { profile: Profile }) {
     setFrequencias(prev => ({ ...prev, [alunoId]: novoStatus }));
     const { error } = await supabase.from('frequencias').upsert({ aluno_id: alunoId, data: dataSelecionada, status: novoStatus }, { onConflict: 'aluno_id, data' });
     if (error) {
-      console.error('Erro ao salvar frequência:', error);
       setFrequencias(prev => ({ ...prev, [alunoId]: statusAtual }));
       showToast('Erro ao salvar frequência: ' + error.message, 'error');
     }

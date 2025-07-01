@@ -37,12 +37,17 @@ export function Notas() {
     async function fetchAlunosDaTurma() {
       setLoadingAlunos(true);
       setSelectedAlunoId('');
-      const { data, error } = await supabase.from('matriculas').select('alunos!inner(id, nome)').eq('turma_id', selectedTurmaId).order('nome', { referencedTable: 'alunos' });
-      if (error) showToast('Falha ao carregar os alunos.', 'error');
-      else if (data) {
-        const alunosDaTurma = data.map(item => item.alunos);
-        setAlunos(alunosDaTurma);
+      const { data: matriculas, error: matriculasError } = await supabase.from('matriculas').select('aluno_id').eq('turma_id', selectedTurmaId);
+      if (matriculasError || !matriculas || matriculas.length === 0) {
+        setAlunos([]);
+        setLoadingAlunos(false);
+        if (matriculasError) console.error('Erro ao buscar matrículas:', matriculasError);
+        return;
       }
+      const alunoIds = matriculas.map(m => m.aluno_id);
+      const { data: alunosData, error: alunosError } = await supabase.from('alunos').select('id, nome').in('id', alunoIds).order('nome');
+      if (alunosError) showToast('Falha ao carregar os alunos.', 'error');
+      else setAlunos(alunosData || []);
       setLoadingAlunos(false);
     }
     fetchAlunosDaTurma();
