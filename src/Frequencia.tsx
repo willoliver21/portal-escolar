@@ -41,11 +41,17 @@ export function Frequencia({ profile }: { profile: Profile }) {
     if (!selectedTurmaId) { setAlunos([]); return; }
     async function fetchAlunosDaTurma() {
       setLoadingAlunos(true);
-      const { data, error } = await supabase.from('matriculas').select('alunos(id, nome)').eq('turma_id', selectedTurmaId).order('nome', { referencedTable: 'alunos' });
-      if (error) console.error('Erro ao buscar alunos da turma:', error);
-      else if (data) {
-        // CORREÇÃO: Type guard robusto para garantir que o objeto 'alunos' não é nulo.
-        const alunosDaTurma = data.map(item => item.alunos).filter((a): a is Aluno => a !== null && typeof a === 'object');
+      // CORREÇÃO: Usamos !inner para garantir que a relação existe e o tipo é inferido corretamente.
+      const { data, error } = await supabase
+        .from('matriculas')
+        .select('alunos!inner(id, nome)')
+        .eq('turma_id', selectedTurmaId)
+        .order('nome', { referencedTable: 'alunos' });
+      
+      if (error) {
+        console.error('Erro ao buscar alunos da turma:', error);
+      } else if (data) {
+        const alunosDaTurma = data.map(item => item.alunos);
         setAlunos(alunosDaTurma);
       }
       setLoadingAlunos(false);
@@ -113,7 +119,7 @@ export function Frequencia({ profile }: { profile: Profile }) {
                               {statusAtual}
                             </span>
                           ) : (
-                            <select value={statusAtual || 'presente'} onChange={(e) => handleStatusChange(aluno.id, e.target.value as StatusFrequencia)} className={`px-3 py-1 bg-gray-700 border border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize`}>
+                            <select value={statusAtual || 'presente'} onChange={(e) => handleStatusChange(aluno.id, e.target.value as StatusFrequencia)} disabled={isLocked} className={`px-3 py-1 bg-gray-700 border border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize disabled:opacity-50 disabled:cursor-not-allowed`}>
                               {statusOptions.map(status => (
                                 <option key={status} value={status} className="capitalize">{status}</option>
                               ))}
