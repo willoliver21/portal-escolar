@@ -14,9 +14,9 @@ const SecretariaDashboard: React.FC<{ profile: Profile }> = ({ profile }) => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-white">Painel da Secretaria</h1>
-      <div className="bg-white/10 backdrop-blur-md p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-semibold mb-4 text-white">Registo de Frequência</h2>
+      <h1 className="text-2xl font-bold mb-4 text-foreground">Painel da Secretaria</h1>
+      <div className="bg-card p-6 rounded-lg border">
+        <h2 className="text-xl font-semibold mb-4 text-card-foreground">Registo de Frequência</h2>
         {/* CORREÇÃO: Passamos a propriedade 'profile' para o componente Frequencia. */}
         <Frequencia profile={profile} />
       </div>

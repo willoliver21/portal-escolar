@@ -73,7 +73,7 @@ Para executar o projeto no seu ambiente de desenvolvimento, siga os passos abaix
 
 1.  **Clone o repositório:**
     ```bash
-    git clone [https://github.com/seu-usuario/portal-escolar.git](https://github.com/seu-usuario/portal-escolar.git)
+    git clone https://github.com/seu-usuario/portal-escolar.git
     cd portal-escolar
     ```
 
@@ -129,4 +129,3 @@ O projeto está em desenvolvimento ativo. As próximas funcionalidades planeadas
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o ficheiro `LICENSE` para mais detalhes.
-
