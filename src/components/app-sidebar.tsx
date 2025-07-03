@@ -8,7 +8,6 @@ import {
   UserCheck,
   ClipboardList,
   BarChart3,
-  Shield,
   School,
   FileText,
   LogOut

@@ -22,57 +22,62 @@ export function Router({ profile }: RouterProps) {
   const { currentPage } = useNavigation();
 
   // Rotas por tipo de usuário
-  const getRoutes = () => {
+  const getRoutes = (): Record<string, React.ReactElement> => {
+    const baseRoutes: Record<string, React.ReactElement> = {
+      '/configuracoes': <div>Configurações (Em desenvolvimento)</div>,
+    };
+
     switch (profile.role) {
       case 'admin':
         return {
+          ...baseRoutes,
           '/admin-dashboard': <AdminDashboard />,
           '/admin/usuarios': <div>Usuários (Em desenvolvimento)</div>,
           '/admin/turmas': <div>Turmas (Em desenvolvimento)</div>,
           '/admin/professores': <div>Professores (Em desenvolvimento)</div>,
           '/admin/relatorios/frequencia': <FrequenciaPage />,
           '/admin/relatorios/notas': <Notas />,
-          '/configuracoes': <div>Configurações (Em desenvolvimento)</div>,
         };
       
       case 'professor':
         return {
+          ...baseRoutes,
           '/dashboard': <Dashboard />,
           '/turmas': <div>Turmas (Em desenvolvimento)</div>,
           '/frequencia': <FrequenciaPage />,
           '/notas': <Notas />,
           '/disciplinas': <div>Disciplinas (Em desenvolvimento)</div>,
-          '/configuracoes': <div>Configurações (Em desenvolvimento)</div>,
         };
       
       case 'secretaria':
         return {
+          ...baseRoutes,
           '/secretaria-dashboard': <SecretariaDashboard profile={profile} />,
           '/secretaria': <Secretaria />,
           '/secretaria/alunos': <Secretaria />,
           '/secretaria/matriculas': <div>Matrículas (Em desenvolvimento)</div>,
           '/secretaria/relatorios': <div>Relatórios (Em desenvolvimento)</div>,
-          '/configuracoes': <div>Configurações (Em desenvolvimento)</div>,
         };
       
       case 'responsavel':
       case 'aluno':
         return {
+          ...baseRoutes,
           '/responsavel-dashboard': <ResponsavelDashboard />,
           '/responsavel/calendario': <div>Calendário (Em desenvolvimento)</div>,
           '/responsavel/boletim': <div>Boletim (Em desenvolvimento)</div>,
           '/responsavel/frequencia': <div>Frequência (Em desenvolvimento)</div>,
-          '/configuracoes': <div>Configurações (Em desenvolvimento)</div>,
         };
       
       default:
         return {
+          ...baseRoutes,
           '/dashboard': <div>Bem-vindo!</div>,
         };
     }
   };
 
-  const routes = getRoutes() as Record<string, React.ReactElement>;
+  const routes = getRoutes();
   const currentComponent = routes[currentPage] || getDefaultRoute();
 
   function getDefaultRoute() {
