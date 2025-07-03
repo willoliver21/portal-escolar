@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { Auth } from './Auth';
-import { AppLayout } from '@/components/layout'; // Importar o novo layout
-import { Dashboard } from './Dashboard';
-import { AdminDashboard } from './AdminDashboard';
-import { ResponsavelDashboard } from './ResponsavelDashboard';
-import { Secretaria } from './Secretaria';
 import { Toast } from './Toast';
 import { NotificationContext } from './NotificationContext';
+import { NavigationProvider } from './contexts/NavigationContext';
+import { Router } from './components/Router';
 
 // Interfaces
 interface Profile {
@@ -71,22 +68,22 @@ export default function App() {
     fetchProfile();
   }, [session]);
 
-  // Função para renderizar o dashboard correto com base no perfil
-  const renderDashboard = () => {
-    if (!profile) return null;
-
+  // Função para obter página inicial baseada no perfil
+  const getInitialPage = () => {
+    if (!profile) return 'dashboard';
+    
     switch (profile.role) {
       case 'admin':
-        return <AdminDashboard />;
+        return '/admin-dashboard';
       case 'professor':
-        return <Dashboard />;
+        return '/dashboard';
       case 'responsavel':
       case 'aluno':
-        return <ResponsavelDashboard />;
+        return '/responsavel-dashboard';
       case 'secretaria':
-        return <Secretaria />;
+        return '/secretaria-dashboard';
       default:
-        return <div>Bem-vindo!</div>;
+        return '/dashboard';
     }
   };
 
@@ -95,9 +92,11 @@ export default function App() {
     <NotificationContext.Provider value={{ showToast }}>
       {isLoading && <div className="fixed inset-0 bg-background flex items-center justify-center z-50"><p>A carregar...</p></div>}
       {!session && !isLoading ? <Auth /> : (
-        <AppLayout>
-          {profile && renderDashboard()}
-        </AppLayout>
+        <NavigationProvider initialPage={getInitialPage()}>
+          <div className="min-h-screen bg-background">
+            {profile && <Router profile={profile} />}
+          </div>
+        </NavigationProvider>
       )}
       {toast.visible && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
     </NotificationContext.Provider>

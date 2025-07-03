@@ -1,52 +1,53 @@
-import { useEffect, useState } from 'react';
-import { supabase } from './supabaseClient';
-import { useNotification } from './NotificationContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { LayoutWithSidebar } from './components/layout-with-sidebar';
+import { useEffect, useState } from 'react'
+import { supabase } from '../supabaseClient'
+import { useNotification } from '../NotificationContext'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { LayoutWithSidebar } from './layout-with-sidebar'
 
 interface AdminStats {
-  total_alunos: number;
-  total_turmas: number;
-}
-interface PresencaData {
-  nome: string;
-  presenca: number;
+  total_alunos: number
+  total_turmas: number
 }
 
-export function AdminDashboard() {
-  const { showToast } = useNotification();
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [presencaData, setPresencaData] = useState<PresencaData[]>([]);
-  const [loading, setLoading] = useState(true);
+interface PresencaData {
+  nome: string
+  presenca: number
+}
+
+export function AdminDashboardWithSidebar() {
+  const { showToast } = useNotification()
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [presencaData, setPresencaData] = useState<PresencaData[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchAdminData() {
-      setLoading(true);
+      setLoading(true)
       const [statsResult, presencaResult] = await Promise.all([
         supabase.rpc('get_admin_stats').single(),
         supabase.rpc('get_dashboard_presenca')
-      ]);
+      ])
 
       if (statsResult.error) {
-        showToast('Erro ao buscar estatísticas do admin.', 'error');
+        showToast('Erro ao buscar estatísticas do admin.', 'error')
       } else {
-        setStats(statsResult.data as AdminStats | null);
+        setStats(statsResult.data as AdminStats | null)
       }
 
       if (presencaResult.error) {
-        showToast('Erro ao buscar dados de presença.', 'error');
+        showToast('Erro ao buscar dados de presença.', 'error')
       } else {
-        setPresencaData(presencaResult.data || []);
+        setPresencaData(presencaResult.data || [])
       }
-      setLoading(false);
+      setLoading(false)
     }
-    fetchAdminData();
-  }, [showToast]);
+    fetchAdminData()
+  }, [showToast])
 
   const breadcrumbs = [
     { title: "Dashboard", url: "/admin-dashboard" },
     { title: "Administrador" }
-  ];
+  ]
 
   if (loading) {
     return (
@@ -59,7 +60,7 @@ export function AdminDashboard() {
           <p>A carregar o dashboard do administrador...</p>
         </div>
       </LayoutWithSidebar>
-    );
+    )
   }
   
   return (
@@ -130,5 +131,5 @@ export function AdminDashboard() {
         </div>
       </div>
     </LayoutWithSidebar>
-  );
+  )
 }

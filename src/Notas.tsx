@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
+import { LayoutWithSidebar } from './components/layout-with-sidebar';
 
 interface Turma { id: string; nome: string; }
 interface Aluno { id: string; nome: string; }
@@ -82,11 +83,36 @@ export function Notas() {
     setIsSubmitting(false);
   }
 
-  if (loadingTurmas) return <p>A carregar as suas turmas...</p>;
+  const breadcrumbs = [
+    { title: "Dashboard", url: "/dashboard" },
+    { title: "Notas" }
+  ];
+
+  if (loadingTurmas) {
+    return (
+      <LayoutWithSidebar 
+        userType="professor" 
+        currentPath="/notas"
+        breadcrumbs={breadcrumbs}
+      >
+        <div className="flex items-center justify-center h-64">
+          <p>A carregar as suas turmas...</p>
+        </div>
+      </LayoutWithSidebar>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Lançamento de Notas</h2>
+    <LayoutWithSidebar 
+      userType="professor" 
+      currentPath="/notas"
+      breadcrumbs={breadcrumbs}
+    >
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold">Lançamento de Notas</h2>
+          <p className="text-muted-foreground mt-1">Gerencie as notas dos alunos nas suas turmas.</p>
+        </div>
       {turmas.length > 0 ? (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,6 +166,7 @@ export function Notas() {
       ) : (
         <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não existem turmas associadas a si. Por favor, contacte um administrador.</p>
       )}
-    </div>
+      </div>
+    </LayoutWithSidebar>
   );
 }

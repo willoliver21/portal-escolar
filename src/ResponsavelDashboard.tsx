@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
+import { LayoutWithSidebar } from './components/layout-with-sidebar';
 
 interface Nota { materia: string; nota: number; data: string; }
 interface Frequencia { data: string; status: 'presente' | 'falta' | 'atestado' | 'ausente'; }
@@ -39,8 +40,38 @@ export function ResponsavelDashboard() {
     fetchAlunoData();
   }, [showToast]);
 
-  if (loading) return <p>A carregar informações do aluno...</p>;
-  if (!alunoData) return <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">Não foi possível encontrar os dados do aluno.</p>;
+  const breadcrumbs = [
+    { title: "Dashboard", url: "/responsavel-dashboard" },
+    { title: "Responsável" }
+  ];
+
+  if (loading) {
+    return (
+      <LayoutWithSidebar 
+        userType="responsavel" 
+        currentPath="/responsavel-dashboard"
+        breadcrumbs={breadcrumbs}
+      >
+        <div className="flex items-center justify-center h-64">
+          <p>A carregar informações do aluno...</p>
+        </div>
+      </LayoutWithSidebar>
+    );
+  }
+
+  if (!alunoData) {
+    return (
+      <LayoutWithSidebar 
+        userType="responsavel" 
+        currentPath="/responsavel-dashboard"
+        breadcrumbs={breadcrumbs}
+      >
+        <p className="p-4 bg-yellow-900/50 border border-yellow-700 rounded-md text-yellow-200">
+          Não foi possível encontrar os dados do aluno.
+        </p>
+      </LayoutWithSidebar>
+    );
+  }
   
   const totalFaltas = alunoData.frequencias.filter(f => f.status === 'falta' || f.status === 'ausente').length;
   const mediaGeral = alunoData.notas.length > 0 ? (alunoData.notas.reduce((acc, n) => acc + n.nota, 0) / alunoData.notas.length).toFixed(1) : 'N/A';
@@ -52,11 +83,16 @@ export function ResponsavelDashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white">Painel do Aluno</h2>
-        <p className="text-gray-400 mt-1">Acompanhe aqui o desempenho de <strong>{alunoData.aluno_nome}</strong>.</p>
-      </div>
+    <LayoutWithSidebar 
+      userType="responsavel" 
+      currentPath="/responsavel-dashboard"
+      breadcrumbs={breadcrumbs}
+    >
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold">Painel do Aluno</h2>
+          <p className="text-muted-foreground mt-1">Acompanhe aqui o desempenho de <strong>{alunoData.aluno_nome}</strong>.</p>
+        </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center text-center">
           <h4 className="text-gray-400 font-medium mb-2">Média Geral</h4>
@@ -98,6 +134,7 @@ export function ResponsavelDashboard() {
           </ul>
         </div>
       </div>
-    </div>
+      </div>
+    </LayoutWithSidebar>
   );
 }

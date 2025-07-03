@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
+import { LayoutWithSidebar } from './components/layout-with-sidebar';
 
 interface Aluno { id: string; nome: string; }
 interface Turma { id: string; nome: string; }
@@ -44,14 +45,36 @@ export function Secretaria() {
     fetchAlunosDaTurma();
   }, [selectedTurmaId, showToast]);
 
-  if (loadingTurmas) return <p>A carregar dados da escola...</p>;
+  const breadcrumbs = [
+    { title: "Dashboard", url: "/secretaria" },
+    { title: "Secretaria" }
+  ];
+
+  if (loadingTurmas) {
+    return (
+      <LayoutWithSidebar 
+        userType="secretaria" 
+        currentPath="/secretaria"
+        breadcrumbs={breadcrumbs}
+      >
+        <div className="flex items-center justify-center h-64">
+          <p>A carregar dados da escola...</p>
+        </div>
+      </LayoutWithSidebar>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white">Painel da Secretaria</h2>
-        <p className="text-gray-400 mt-1">Gestão de alunos e turmas da escola.</p>
-      </div>
+    <LayoutWithSidebar 
+      userType="secretaria" 
+      currentPath="/secretaria"
+      breadcrumbs={breadcrumbs}
+    >
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold">Painel da Secretaria</h2>
+          <p className="text-muted-foreground mt-1">Gestão de alunos e turmas da escola.</p>
+        </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-4">
           <div>
@@ -82,6 +105,7 @@ export function Secretaria() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </LayoutWithSidebar>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { useNotification } from './NotificationContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LayoutWithSidebar } from './components/layout-with-sidebar';
 
 interface PresencaData {
   nome: string;
@@ -27,33 +28,83 @@ export function Dashboard() {
     fetchDashboardData();
   }, [showToast]);
 
-  if (loading) return <p>A carregar dados do dashboard...</p>;
+  const breadcrumbs = [
+    { title: "Dashboard", url: "/dashboard" },
+    { title: "Professor" }
+  ];
+
+  if (loading) {
+    return (
+      <LayoutWithSidebar 
+        userType="professor" 
+        currentPath="/dashboard"
+        breadcrumbs={breadcrumbs}
+      >
+        <div className="flex items-center justify-center h-64">
+          <p>A carregar dados do dashboard...</p>
+        </div>
+      </LayoutWithSidebar>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white">Dashboard do Professor</h2>
-        <p className="text-gray-400 mt-1">Visão geral do desempenho dos seus alunos.</p>
+    <LayoutWithSidebar 
+      userType="professor" 
+      currentPath="/dashboard"
+      breadcrumbs={breadcrumbs}
+    >
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold">Dashboard do Professor</h2>
+          <p className="text-muted-foreground mt-1">Visão geral do desempenho dos seus alunos.</p>
+        </div>
+        
+        <div className="bg-card border rounded-lg p-6">
+          <h3 className="font-semibold mb-4 text-lg">Percentual de Presença dos Alunos</h3>
+          {presencaData.length > 0 ? (
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer>
+                <BarChart data={presencaData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="nome" 
+                    className="text-muted-foreground" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                  />
+                  <YAxis 
+                    className="text-muted-foreground" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tickFormatter={(value) => `${value}%`} 
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'hsl(var(--muted))' }}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--popover))', 
+                      border: '1px solid hsl(var(--border))', 
+                      color: 'hsl(var(--popover-foreground))',
+                      borderRadius: '0.5rem'
+                    }} 
+                    formatter={(value: number) => [`${value.toFixed(1)}%`, 'Presença']} 
+                  />
+                  <Legend className="text-muted-foreground" />
+                  <Bar 
+                    dataKey="presenca" 
+                    fill="hsl(var(--primary))" 
+                    name="Presença (%)" 
+                    radius={[4, 4, 0, 0]} 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Não há dados de presença para exibir.</p>
+          )}
+        </div>
       </div>
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-        <h3 className="font-semibold mb-4 text-lg text-white">Percentual de Presença dos Alunos</h3>
-        {presencaData.length > 0 ? (
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
-              <BarChart data={presencaData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" />
-                <XAxis dataKey="nome" stroke="#a0aec0" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#a0aec0" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
-                <Tooltip contentStyle={{ backgroundColor: '#2d3748', border: '1px solid #4a5568', color: '#e2e8f0' }} formatter={(value: number) => [`${value.toFixed(1)}%`, 'Presença']} />
-                <Legend wrapperStyle={{ fontSize: '14px' }} />
-                <Bar dataKey="presenca" fill="#4299E1" name="Presença (%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <p className="text-gray-400">Não há dados de presença para exibir.</p>
-        )}
-      </div>
-    </div>
+    </LayoutWithSidebar>
   );
 }
